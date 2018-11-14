@@ -1,0 +1,255 @@
+#!/usr/bin/perl
+require "grid_utils.pl";
+
+$lctype = shift; # "modis" or "asc"
+$lcid = shift; 
+$domain = shift;
+$startyear = shift;
+$endyear = shift;
+$latminmin_in = shift;
+$latminmax_in = shift;
+$lonminmin_in = shift;
+$lonminmax_in = shift;
+$pix_per_deg_y = shift; # modis pix_per_degree, = 240
+$resolution_out = shift; # in degrees
+$outdir = shift;
+$outpfx = shift;
+
+@varnames = ("LAI","NDVI","albedo");
+
+if ($domain eq "N_AM") {
+  $latminmin = 0;
+  $lonminmin = -180;
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.N_AM_union_L2015_plus_hawaii.0.0625_deg.asc";
+  @coarse_tile_mask = (
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0],
+    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+  );
+  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
+  $lcpfx = "MCD12Q1";
+  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
+}
+elsif ($domain eq "CONUS_MX") {
+  $latminmin = 10;
+  $lonminmin = -130;
+#  $landmask = "/media/tjbohn/Data/data/masks/mask.land.CONUS_MX.0.0625_deg.asc";
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.N_AM.0.0625_deg.asc";
+  @coarse_tile_mask = (
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 1, 1, 1, 0, 0],
+  );
+  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
+  $lcpfx = "MCD12Q1";
+  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
+}
+elsif ($domain eq "HI") {
+  $latminmin = 10;
+  $lonminmin = -170;
+  $landmask = "null";
+  @coarse_tile_mask = (
+    [1, 1],
+    [1, 1],
+  );
+  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
+  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
+}
+elsif ($domain eq "USMX") {
+  $latminmin = 10;
+  $lonminmin = -130;
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.USMX.0.0625_deg.asc";
+  @coarse_tile_mask = (
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 1, 1, 1, 0, 0],
+  );
+  $lcdir = "/media/tjbohn/Data/data/LandCover/NLCD_INEGI/$lcid/asc.clip.1deg";
+  $lcpfx = "nlcd_inegi";
+  $lc_table = "/home/tjbohn/data/USMX/lc_table.USMX.NLCD_INEGI.txt";
+}
+elsif ($domain eq "PR") {
+  $latminmin = 10;
+  $lonminmin = -70;
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.PR.0.0625_deg.asc";
+  @coarse_tile_mask = (
+    [1],
+  );
+  $lcdir = "/media/tjbohn/Data/data/LandCover/NLCD_INEGI/$lcid/asc.clip.1deg";
+  $lcpfx = "nlcd_inegi";
+  $lc_table = "/home/tjbohn/data/PR/lc_table.PR.NLCD_INEGI.txt";
+}
+elsif ($domain eq "HMO") {
+  $latminmin = 20;
+  $lonminmin = -120;
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.HMO.$resolution_out\_deg.asc";
+  @coarse_tile_mask = (
+    [1],
+  );
+  $boxlatmin = 28.5;
+  $boxlatmax = 29.5;
+  $boxlonmin = -111.5;
+  $boxlonmax = -110.5;
+  $lcdir = "/home/tjbohn/data/HMO";
+  $lcpfx = "land_use.HMO.NLCD_INEGI_IMPLAN";
+  $lc_table = "/home/tjbohn/data/HMO/lc_table.HMO.NLCD_INEGI_IMPLAN.txt";
+}
+elsif ($domain eq "PHX") {
+  $latminmin = 10;
+  $lonminmin = -120;
+  $landmask = "/media/tjbohn/Data/data/masks/mask.land.PHX.$resolution_out\_deg.asc";
+  @coarse_tile_mask = (
+    [1],
+  );
+  $boxlatmin = 32.5;
+  $boxlatmax = 34;
+  $boxlonmin = -112.9375;
+  $boxlonmax = -111.4375;
+  $lcdir = "/home/tjbohn/data/PHX";
+  $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2010";
+  $lc_table = "/home/tjbohn/data/PHX/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+}
+$nLats = scalar @coarse_tile_mask;
+$nLons = scalar @{$coarse_tile_mask[0]};
+
+# get lists of MODIS tiles to download and process
+if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+  # define hvs for each 10x10 tile
+  for ($i=0; $i<$nLats; $i++) {
+    $lat = $latminmin + ($nLats-1-$i)*10;
+    for ($j=0; $j<$nLons; $j++) {
+      if (!$coarse_tile_mask[$i][$j]) { next; }
+      # could also just set $v equal to $i...
+      $v_by_lat{$lat} = int((80-$lat)/10);
+      $lon = $lonminmin + 10*$j;
+      $latmin = $lat;
+      $latmax = $lat + 10;
+      $lonmin = $lon;
+      $lonmax = $lon + 10;
+      ($hmin, $hmax, $vmin, $vmax) = &compute_hv_bounds_around_latlon_box($latmin,$latmax,$lonmin,$lonmax,$pix_per_deg_y);
+      $hmin_by_latlon{$lat}{$lon} = $hmin;
+      $hmax_by_latlon{$lat}{$lon} = $hmax;
+      @tmplist = ();
+      for ($h=$hmin; $h<=$hmax; $h++) {
+        push @tmplist, $h;
+      }
+      $h_by_latlon{$lat}{$lon} = @tmplist;
+      foreach $h (@tmplist) {
+        $valid_hs_by_v{$v_by_lat{$lat}}{$h} = 1;
+      }
+    }
+  }
+}
+else {
+  # define hvs for the specified latlon box
+  ($hmin, $hmax, $vmin, $vmax) = &compute_hv_bounds_around_latlon_box($boxlatmin,$boxlatmax,$boxlonmin,$boxlonmax,$pix_per_deg_y);
+  $v_by_lat{$boxlatmin} = $vmin;
+  $hmin_by_latlon{$boxlatmin}{$boxlonmin} = $hmin;
+  $hmax_by_latlon{$boxlatmin}{$boxlonmin} = $hmax;
+  @tmplist = ();
+  for ($h=$hmin; $h<=$hmax; $h++) {
+    push @tmplist, $h;
+  }
+  $h_by_latlon{$boxlatmin}{$boxlonmin} = @tmplist;
+  foreach $h (@tmplist) {
+    $valid_hs_by_v{$v_by_lat{$boxlatmin}}{$h} = 1;
+  }
+}
+  
+# loop over 10-deg bands (modis v) from South to North
+for ($i=$nLats-1; $i>=0; $i--) {
+  if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+    $lat = $latminmin + ($nLats-1-$i)*10;
+  }
+  else {
+    $lat = $boxlatmin;
+  }
+  $v = $v_by_lat{$lat};
+  $vstr = sprintf "%02d", $v;
+
+  if ($lat < $latminmin_in || $lat >= $latminmax_in) { next; }
+
+  # loop over 10x10 tiles
+  for ($j=0; $j<$nLons; $j++) {
+    if (!$coarse_tile_mask[$i][$j]) { next; }
+    if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+      $lon = $lonminmin + 10*$j;
+    }
+    else {
+      $lon = $boxlonmin;
+    }
+
+    if ($lon < $lonminmin_in || $lon >= $lonminmax_in) { next; }
+
+    # download MODIS files and aggregate
+    if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+      $latmax = $lat+10;
+      $lonmax = $lon+10;
+    }
+    else {
+      $latmax = $boxlatmax;
+      $lonmax = $boxlonmax;
+    }
+    $script = "wrap_download_join_and_agg_MODIS_over_landcover.pl";
+    $logfile = "log.$script.$domain.$lat.$latmax.$lon.$lonmax.txt";
+#    $stagelist = "1";
+#    $force = 0;
+#    $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile";
+#    print "$cmd\n";
+#    (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
+    $stagelist = "1,2";
+    $force = 0;
+    $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
+    print "$cmd\n";
+    (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
+  }
+
+}
+
+sub compute_hv_bounds_around_latlon_box {
+
+  my $latmin = shift @_;
+  my $latmax = shift @_;
+  my $lonmin = shift @_;
+  my $lonmax = shift @_;
+  my $pix_per_deg_y = shift @_;
+
+  my $lat, $lon, $htmp, $vtmp, $row, $col;
+  my $hmin = -1;
+  my $hmax = -1;
+  my $vmin = -1;
+  my $vmax = -1;
+  my $resolution = 1/$pix_per_deg_y;
+
+  $latmin += 0.5*$resolution;
+  $latmax -= 0.5*$resolution;
+  $lonmin += 0.5*$resolution;
+  $lonmax -= 0.5*$resolution;
+
+  foreach $lat ($latmin,$latmax) {
+    foreach $lon ($lonmin,$lonmax) {
+      ($htmp,$vtmp,$row,$col) = &latlon_to_modis_sinusoidal($lat,$lon,$pix_per_deg_y);
+      if ($hmin == -1) {
+        $hmin = $hmax = $htmp;
+        $vmin = $vmax = $vtmp;
+      }
+      else {
+        if ($htmp < $hmin) { $hmin = $htmp; }
+        if ($htmp > $hmax) { $hmax = $htmp; }
+        if ($vtmp < $vmin) { $vmin = $vtmp; }
+        if ($vtmp > $vmax) { $vmax = $vtmp; }
+      }
+    }
+  }
+
+  return ($hmin, $hmax, $vmin, $vmax);
+}

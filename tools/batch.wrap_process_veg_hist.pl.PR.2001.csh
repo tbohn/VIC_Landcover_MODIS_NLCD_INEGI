@@ -1,0 +1,11 @@
+#wrap_process_veg_hist.pl /media/tjbohn/Data/data/VegHist/NLCD_INEGI_MODIS /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS 2001.PR veg_hist.10 0,1,2,3,4 null 2001.PR 3600 10 1 >& log.wrap_process_veg_hist.pl.PR.2001.10_20.0-4.txt
+
+#wrap_process_veg_hist.pl /media/tjbohn/Data/data/VegHist/NLCD_INEGI_MODIS /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS 2001.PR veg_hist.10 5,6 null 2001.PR 300 10 1 >& log.wrap_process_veg_hist.pl.PR.2001.10_20.5-6.txt
+
+#wrap_process_veg_hist.pl /media/tjbohn/Data/data/VegHist/NLCD_INEGI_MODIS /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS 2001.PR veg_hist.10 7 null 2001.PR 120 10 1 /home/tjbohn/data/PR domain.PR params.PR.S2006 NLCD_INEGI >& log.wrap_process_veg_hist.pl.PR.2001.10_20.7.txt
+#set_run_cell.py -p /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc -r /home/tjbohn/data/PR/domain/domain.PR.10_20n.-70_-60e.nc -v mask -o /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp
+#mv /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc
+
+wrap_process_veg_hist.pl /media/tjbohn/Data/data/VegHist/NLCD_INEGI_MODIS /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS 2001.PR veg_hist.10 8,9 null 2001.PR 120 10 1 /home/tjbohn/data/PR domain.PR params.PR.S2006 NLCD_INEGI >& log.wrap_process_veg_hist.pl.PR.2001.10_20.8-9.txt
+set_run_cell.py -p /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2001_2001.10_20n.-70_-60e.nc -r /home/tjbohn/data/PR/domain/domain.PR.10_20n.-70_-60e.nc -v mask -o /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2001_2001.10_20n.-70_-60e.nc.tmp
+mv /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2001_2001.10_20n.-70_-60e.nc.tmp /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2001_2001.10_20n.-70_-60e.nc
