@@ -14,6 +14,7 @@ $pix_per_deg_y = shift; # modis pix_per_degree, = 240
 $resolution_out = shift; # in degrees
 $outdir = shift;
 $outpfx = shift;
+$force = shift;
 
 @varnames = ("LAI","NDVI","albedo");
 
@@ -99,9 +100,9 @@ elsif ($domain eq "HMO") {
   $boxlatmax = 29.5;
   $boxlonmin = -111.5;
   $boxlonmax = -110.5;
-  $lcdir = "/home/tjbohn/data/HMO";
+  $lcdir = "/home/tjbohn/data/HMO/params";
   $lcpfx = "land_use.HMO.NLCD_INEGI_IMPLAN";
-  $lc_table = "/home/tjbohn/data/HMO/lc_table.HMO.NLCD_INEGI_IMPLAN.txt";
+  $lc_table = "/home/tjbohn/data/HMO/params/lc_table.HMO.NLCD_INEGI_IMPLAN.txt";
 }
 elsif ($domain eq "PHX") {
   $latminmin = 10;
@@ -114,9 +115,42 @@ elsif ($domain eq "PHX") {
   $boxlatmax = 34;
   $boxlonmin = -112.9375;
   $boxlonmax = -111.4375;
-  $lcdir = "/home/tjbohn/data/PHX";
-  $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2010";
-  $lc_table = "/home/tjbohn/data/PHX/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+  $lcdir = "/home/tjbohn/data/PHX/params";
+  if ($lcid =~ /2011.PHX.CAP_LTER/) {
+    if ($lcid =~ /2011.PHX.CAP_LTER(.current)?$/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.current";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_drou/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_drou";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_flood/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_flood";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_heat/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_heat";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.strategic/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.strategic";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_emera/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_emera";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_hhh/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_hhh";
+    }
+    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_zero/) {
+      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_zero";
+    }
+    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_CAP_LTER.txt";
+  }
+  elsif ($lcid =~ /ICLUS.2010/) {
+    $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2010";
+    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+  }
+  elsif ($lcid =~ /ICLUS.2000/) {
+    $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2000";
+    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+  }
 }
 $nLats = scalar @coarse_tile_mask;
 $nLons = scalar @{$coarse_tile_mask[0]};
@@ -200,14 +234,12 @@ for ($i=$nLats-1; $i>=0; $i--) {
       $lonmax = $boxlonmax;
     }
     $script = "wrap_download_join_and_agg_MODIS_over_landcover.pl";
-    $logfile = "log.$script.$domain.$lat.$latmax.$lon.$lonmax.txt";
+    $logfile = "log.$script.$domain.$lcid.$lat.$latmax.$lon.$lonmax.txt";
 #    $stagelist = "1";
-#    $force = 0;
 #    $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
     $stagelist = "1,2";
-    $force = 0;
     $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";

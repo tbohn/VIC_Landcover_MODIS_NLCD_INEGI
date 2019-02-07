@@ -593,9 +593,10 @@ def main():
             fill_value = fill_value_float
 
         if varname in varnames_soil:
-            fill_tmp = ds_param[varname].encoding['_FillValue']
-            data_tmp = np.where(ds_param[varname] == fill_tmp, fill_value, ds_param[varname])
-            ds_param[varname][:] = data_tmp[:]
+            if '_FillValue' in ds_param[varname].encoding.keys():
+                fill_tmp = ds_param[varname].encoding['_FillValue']
+                data_tmp = np.where(ds_param[varname] == fill_tmp, fill_value, ds_param[varname])
+                ds_param[varname][:] = data_tmp[:]
             out_dict[varname] = subsample_variable(ds_param[varname],
                                                    shape,
                                                    dtype,
@@ -606,9 +607,10 @@ def main():
                                                    mask, fill_value)
         elif varname in varnames_veg:
             if varname in veg_lib_params.keys():
-                fill_tmp = ds_param[varname].encoding['_FillValue']
-                data_tmp = np.where(ds_param[varname] == fill_tmp, fill_value, ds_param[varname])
-                ds_param[varname][:] = data_tmp[:]
+                if '_FillValue' in ds_param[varname].encoding.keys():
+                    fill_tmp = ds_param[varname].encoding['_FillValue']
+                    data_tmp = np.where(ds_param[varname] == fill_tmp, fill_value, ds_param[varname])
+                    ds_param[varname][:] = data_tmp[:]
                 # Mask veg params to only exist where associated veg is present
                 if varname in varnames_3d_veg:
                     veg_lib_params[varname][Cv_mask != 1] = fill_value
@@ -633,9 +635,10 @@ def main():
                                                        cellsize,
                                                        mask, fill_value)
             elif varname in varnames_3d_climfile:
-                fill_tmp = ds_clim[varname].encoding['_FillValue']
-                data_tmp = np.where(ds_clim[varname] == fill_tmp, fill_value, ds_clim[varname])
-                ds_clim[varname][:] = data_tmp[:]
+                if '_FillValue' in ds_clim[varname].encoding.keys():
+                    fill_tmp = ds_clim[varname].encoding['_FillValue']
+                    data_tmp = np.where(ds_clim[varname] == fill_tmp, fill_value, ds_clim[varname])
+                    ds_clim[varname][:] = data_tmp[:]
                 out_dict[varname] = subsample_variable(ds_clim[varname],
                                                        shape,
                                                        dtype,
@@ -692,7 +695,7 @@ def main():
                     b = np.where(mask != 1)[1]
                     for i,j in zip(a,b):
                         Cv_tmp[0,i,j] = 1.0
-                    Cv_sum = np.nansum(Cv_tmp, axis=0)
+                    Cv_sum = np.around(np.nansum(Cv_tmp, axis=0),decimals=4)
                     a = np.where(Cv_sum != 1.0)[0]
                     b = np.where(Cv_sum != 1.0)[1]
                     for i,j in zip(a,b):
@@ -791,6 +794,8 @@ def main():
     mismatches[out_dict['Ksat'][0] > 0] = 0
     a = np.where(mismatches == 1)[0]
     b = np.where(mismatches == 1)[1]
+    for i,j in zip(a,b):
+        print('assigning defaults at i,j',i,j)
     for varname in default.keys():
         if varname in varnames_2d_soil:
             for i,j in zip(a,b):

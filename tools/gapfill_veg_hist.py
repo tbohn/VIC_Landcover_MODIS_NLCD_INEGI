@@ -66,25 +66,35 @@ def make_kernel(rad_time, rad_space, sigma_time, sigma_space):
     kxlen = 2*rad_space+1
     kylen = 2*rad_space+1
     kernel = np.zeros([ktlen,kxlen,kylen])
-    sum = 0
-    for t in range(ktlen):
-        for i in range(kxlen):
-            for j in range(kylen):
-              if (sigma_space > 0):
-                  space_term = ((i-rad_space)**2+(j-rad_space)**2) / (2*sigma_space**2)
-              else:
-                  space_term = 0
-              if (sigma_time > 0):
-                  time_term = (t-rad_time)**2/(2*sigma_time**2)
-              else:
-                  time_term = 0
-              kernel[t,i,j] = np.exp( -( space_term + time_term ) )
-              sum += kernel[t,i,j]
-    for t in range(ktlen):
-        for i in range(kxlen):
-            for j in range(kylen):
-                kernel[t,i,j] /= sum
+    nzero = 1
+    while nzero > 0:
+        sum = 0
+        for t in range(ktlen):
+            for i in range(kxlen):
+                for j in range(kylen):
+                  if (sigma_space > 0):
+                      space_term = ((i-rad_space)**2+(j-rad_space)**2) / (2*sigma_space**2)
+                  else:
+                      space_term = 0
+                  if (sigma_time > 0):
+                      time_term = (t-rad_time)**2/(2*sigma_time**2)
+                  else:
+                      time_term = 0
+                  kernel[t,i,j] = np.exp( -( space_term + time_term ) )
+                  sum += kernel[t,i,j]
+        for t in range(ktlen):
+            for i in range(kxlen):
+                for j in range(kylen):
+                    kernel[t,i,j] /= sum
+        nzero = ktlen*kxlen*kylen - np.count_nonzero(kernel)
+        if nzero > 0:
+            print('WARNING: some pixels',nzero,'in kernel have 0 weight; doubling sigma')
+            sigma_time *= 0
+            sigma_space *= 0
+
+
     return kernel
+
 
 # gapfilling with a gaussian kernel
 def gapfill (mydata, opmask, data_with_buffer, data_count_with_buffer, rt, rs, st, ss):
@@ -160,6 +170,8 @@ def gapfill (mydata, opmask, data_with_buffer, data_count_with_buffer, rt, rs, s
             sumwtdata = np.nansum(wtdata)
             if (sumwts > 0):
                 mydata[t,i,j] = sumwtdata / sumwts
+#            else:
+#                print('WARNING: sumwts',sumwts,'at t,i,j',t,i,j)
 
     return mydata
 
@@ -223,7 +235,7 @@ def main():
     Cv = ds['Cv']
 
     nTime = len(timevar)
-    nClasses = len(classvar)
+    nClass = len(classvar)
     nLat = len(latvar)
     nLon = len(lonvar)
 
@@ -249,7 +261,7 @@ def main():
     if cycle:
         bufs = nLat
     else:
-        bufs = 1
+        bufs = int(nLat/5)
     nTime_wbuf = nTime+2*buft
     nLat_wbuf = nLat+2*bufs
     nLon_wbuf = nLon+2*bufs
@@ -297,21 +309,26 @@ def main():
             data = ds[tmpvar]
 
             # allocate gapfill_flag
-            gapfill_flag = np.full([nTime,nClasses,nLat,nLon],0,dtype=int)
+            gapfill_flag = np.full([nTime,nClass,nLat,nLon],0,dtype=int)
 
             # Null out data for which count is below threshold
             data[data_count < count_thresh] = np.nan
             should_exist = np.where(Cv > 0, 1, 0)
             exist_before = np.where(~np.isnan(data), 1, 0)
+            for c in range(nClass):
+#                print(varname,type,'class',c,'ngaps',np.count_nonzero(should_exist[c]-exist_before[:,c]))
+                if (np.count_nonzero(should_exist[:,c]) > 0 and
+                    np.count_nonzero(exist_before[:,c]) == 0):
+                    print('WARNING: values needed in',np.count_nonzero(should_exist[:,c]),'cells for',varname,type,'class',c,'but no valid points found')
 
             # Temporal Gaps
 
             # Set up tmp arrays with optional buffer for boundaries
             if set_boundaries:
-                data_wbuf_time = np.full([nTime_wbuf,nClasses,nLat,nLon],boundary_val,dtype=np.single)
+                data_wbuf_time = np.full([nTime_wbuf,nClass,nLat,nLon],boundary_val,dtype=np.single)
                 data_wbuf_time[buft:-buft] = data[:]
             else:
-                data_wbuf_time = np.full([nTime,nClasses,nLat,nLon],0,dtype=np.single)
+                data_wbuf_time = np.full([nTime,nClass,nLat,nLon],0,dtype=np.single)
                 data_wbuf_time[:] = data[:]
 
             # Do gapfilling
@@ -330,10 +347,9 @@ def main():
             data_count_tmp[:] = data_count[:].astype(int)
             exist_after = np.where(~np.isnan(data), 1, 0)
             data_count_tmp = np.maximum(data_count_tmp, exist_after * count_thresh)
-
             # Spatial buffer
-            data_wbuf_space = np.full([nTime,nClasses,nLon_wbuf,nLat_wbuf],np.nan,dtype=np.single)
-            data_count_wbuf_space = np.full([nTime,nClasses,nLon_wbuf,nLat_wbuf],0,dtype=np.int)
+            data_wbuf_space = np.full([nTime,nClass,nLon_wbuf,nLat_wbuf],np.nan,dtype=np.single)
+            data_count_wbuf_space = np.full([nTime,nClass,nLon_wbuf,nLat_wbuf],0,dtype=np.int)
             for i in range(8):
                 if (cycle):
                     data_wbuf_space[slices_data_wbuf[i][0],
@@ -362,9 +378,9 @@ def main():
                                           slices_data_wbuf[i][2],
                                           slices_data_wbuf[i][3]] = count_thresh
 
-            # Do gapfilling
+            # Do gapfilling with gaussian kernel
             opmask = should_exist - exist_after
-            for c in range(nClasses):
+            for c in range(nClass):
 
                 rt = 0
                 st = 0
@@ -373,15 +389,28 @@ def main():
                 data[:,c] = gapfill(data[:,c],opmask[:,c],data_wbuf_space[:,c],data_count_wbuf_space[:,c],rt,rs,st,ss)
 
 
-            # Assign defaults to gaps that weren't filled
-            print('assigning defaults')
+            # Do gapfilling with simple spatial average
             exist_after = np.where(~np.isnan(data), 1, 0)
             opmask = should_exist - exist_after
-            for c in range(nClasses):
-                a = np.where(opmask[0,c] == 1)[0]
-                b = np.where(opmask[0,c] == 1)[1]
-                for i,j in zip(a,b):
-                    data[:,c,i,j] = defaults[varname][type] 
+            if np.count_nonzero(opmask) > 0:
+                print('simple spatial average')
+                tmp = np.nanmean(data,axis=(2,3))
+                for t in range(nTime):
+                    for c in range(nClass):
+                        data[t,c,opmask[t,c]==1] = tmp[t,c]
+
+            # Assign defaults to gaps that weren't filled
+            exist_after = np.where(~np.isnan(data), 1, 0)
+            opmask = should_exist - exist_after
+            if np.count_nonzero(opmask) > 0:
+                print('assigning defaults')
+                for c in range(nClass):
+                    print(varname,type,'class',c,'ngaps',np.count_nonzero(should_exist[c]-exist_after[:,c]))
+                    a = np.where(opmask[0,c] == 1)[0]
+                    b = np.where(opmask[0,c] == 1)[1]
+                    for i,j in zip(a,b):
+                        data[:,c,i,j] = defaults[varname][type] 
+
             ds[tmpvar].encoding['zlib'] = True
 
             # Update gapfill_flag

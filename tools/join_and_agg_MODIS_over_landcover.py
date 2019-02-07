@@ -169,6 +169,7 @@ def main():
     elif opt in ("-o", "--outpathpfx"):
       outpathpfx = arg
 
+  print('begin')
 
   # Parse hv_boundlist
   h_list = []
@@ -223,6 +224,7 @@ def main():
   pCellsize = re.compile('cellsize',re.I)
   pNodata = re.compile('nodata(_val)?',re.I)
 
+  print('init output structs')
 
   # Initialize output data structures
   nrows_out = int(math.ceil((maxlat-minlat)/resolution))
@@ -256,6 +258,7 @@ def main():
   clock_old = clock_new
   time_old = time_new
 
+  print('read land mask')
   # Read land mask
   if (landmask != 'null'):
     print('reading landmask file',landmask)
@@ -327,6 +330,7 @@ def main():
   year0 = date_list[0][0:4]
   ndates = len(date_list)
 
+  print('open output file and write header')
   # Open output file and write header
   outfile = outpathpfx + '.' + lcid + '.nc'
   print('creating output file',outfile)
@@ -447,6 +451,7 @@ def main():
   ncols_modis_save = 2400
   day_save = -7
 
+  print('loop over time')
   # Loop over dates
   for t in range(len(date_list)):
 
@@ -818,12 +823,11 @@ def main():
               bin = '{0:08b}'.format(LAI_qc_data[k,row_modis,col_modis])
               bin2 = '{0:08b}'.format(LAI_qc2_data[k,row_modis,col_modis])
               goodqc = True
-              if (bin[7] == '1' or bin[5] == '1' or bin[3:5] == '01' or bin[3:5] == '10' or bin2[1] == '1' or bin2[5] == '1' or bin2[3] == '1' or bin2[2] == '1' or bin2[1] == '1'):
+              if (bin[7] == '1' or bin[6] == '1' or bin[3:5] == '01' or bin[3:5] == '10' or bin2[1] == '1' or bin2[5] == '1' or bin2[3] == '1' or bin2[2] == '1' or bin2[1] == '1'):
                 goodqc = False
               LAI_tmp = fill_value_LAI
               if (LAI_data[k,row_modis,col_modis] != fill_value_LAI
-                  and (goodqc or lc_LAI_use_LAI_qc[lc_class] == False)
-                  and (lc_use_LAI_NDVI_rel[lc_class] == False)):
+                  and (goodqc or lc_LAI_use_LAI_qc[lc_class] == False)):
                 LAI_tmp = LAI_data[k,row_modis,col_modis]
                 data_out['LAI'][lc_class]['count'][row_out,col_out] += lc_class_count_per_class
                 data_out['LAI'][lc_class]['mean'][row_out,col_out] += LAI_tmp * lc_class_count_per_class
@@ -831,7 +835,8 @@ def main():
                   and (goodqc or lc_NDVI_use_LAI_qc[lc_class] == False)):
                 data_out['NDVI'][lc_class]['count'][row_out,col_out] += lc_class_count_per_class
                 data_out['NDVI'][lc_class]['mean'][row_out,col_out] += NDVI_data[k,row_modis,col_modis] * lc_class_count_per_class
-                if lc_use_LAI_NDVI_rel[lc_class]:
+                if (lc_LAI_use_LAI_qc[lc_class] and not goodqc
+                    and lc_use_LAI_NDVI_rel[lc_class]):
                   LAI_tmp = compute_LAI(NDVI_data[k,row_modis,col_modis])
                   data_out['LAI'][lc_class]['count'][row_out,col_out] += lc_class_count_per_class
                   data_out['LAI'][lc_class]['mean'][row_out,col_out] += LAI_tmp * lc_class_count_per_class
