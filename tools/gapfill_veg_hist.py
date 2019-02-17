@@ -7,6 +7,22 @@ import sys, getopt
 import math
 import time
 
+# Function for setting large gaps to 0
+def set_large_gaps_to_zero(x, radius):
+    y = x.copy()
+    N = len(x)
+    a = np.where(np.isnan(y))[0]
+    for i in a:
+        if i < radius:
+            window = x[:i+radius+1]
+        elif i > N-1 - radius:
+            window = x[i-radius:]
+        else:
+            window = x[i-radius:i+radius+1]
+        if np.all(np.isnan(window)):
+            y[i] = 0
+    return y
+
 # Function for simple linear interpolation of temporal gaps
 def interp_gaps(y, maxlen, cycle):
 
@@ -17,7 +33,7 @@ def interp_gaps(y, maxlen, cycle):
     gap = {}
     istart = np.full(N,-1,dtype=int)
 
-    # Identify gaps
+    # Identify gaps (sequences of contiguous NaNs)
     for i in range(N):
         if np.isnan(y[i]):
             if i > 0 and istart[i-1] >= 0:
@@ -332,6 +348,10 @@ def main():
                 data_wbuf_time[:] = data[:]
 
             # Do gapfilling
+            # for anomalies, set large gaps to 0 before interpolation
+            if stat_type == 'anom':
+                data_wbuf_time = np.apply_along_axis(set_large_gaps_to_zero, 0, data_wbuf_time, 3)
+            # linear interpolation
             data_wbuf_time = np.apply_along_axis(interp_gaps, 0, data_wbuf_time, maxlen, cycle)
 
             # Save back in data array
