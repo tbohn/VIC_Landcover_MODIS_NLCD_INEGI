@@ -11,11 +11,16 @@ This project contains several versions of land cover parameters for the VIC land
 docs/
  - Overview.md - overview of whole project
  - INEGI/ - processing of INEGI Usos de Suelo y Vegetacion maps
+
  ...- "Processing of INEGI USOSV dataset.docx" - describes the processing of INEGI maps, including the names of the scripts involved in each processing step
+
  - NLCD_INEGI/ - further processing and merging of NLCD and INEGI maps
+
  ...- Scripts.md - list of scripts, including description and usage
  ...- Procedure.md - list of processing steps
+
  - MODIS/ - aggregation of MODIS data over land cover maps and generation of VIC parameter files
+
  ...- Scripts.md - list of scripts, including description and usage
  ...- Procedure.md - list of processing steps
 
