@@ -17,5 +17,6 @@ examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - inputs/ - input files for the example
  - outputs/ - intermediate and final output files for the example
 
-tools/
- - processing scripts are stored here; for list and descriptions, see the files under docs/
+tools/ - processing scripts are stored here; for details, see the files under docs/
+ - INEGI/ - ArcPy scripts (used in conjunction with ESRI ArcGIS) for processing the INEGI Uso de Suelo maps
+ - MODIS/ - scripts for aggregating MODIS data over land cover maps and processing them to form VIC parameter files
