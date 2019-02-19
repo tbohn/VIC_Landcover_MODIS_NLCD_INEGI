@@ -12,17 +12,17 @@ docs/
  - Overview.md - overview of whole project
  - INEGI/ - processing of INEGI Usos de Suelo y Vegetacion maps
 
- ...- "Processing of INEGI USOSV dataset.docx" - describes the processing of INEGI maps, including the names of the scripts involved in each processing step
+     - "Processing of INEGI USOSV dataset.docx" - describes the processing of INEGI maps, including the names of the scripts involved in each processing step
 
  - NLCD_INEGI/ - further processing and merging of NLCD and INEGI maps
 
- ...- Scripts.md - list of scripts, including description and usage
- ...- Procedure.md - list of processing steps
+     - Scripts.md - list of scripts, including description and usage
+     - Procedure.md - list of processing steps
 
  - MODIS/ - aggregation of MODIS data over land cover maps and generation of VIC parameter files
 
- ...- Scripts.md - list of scripts, including description and usage
- ...- Procedure.md - list of processing steps
+     - Scripts.md - list of scripts, including description and usage
+     - Procedure.md - list of processing steps
 
 examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - batch.process_one_tile.40_50n.130_120e.sh - linux shell script that contains the commands for processing an example 10x10 tile
