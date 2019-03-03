@@ -16,7 +16,7 @@ foreach $file (sort(@files)) {
     $startyear = $1;
     $endyear = $1;
   }
-  $cmd = "python /home/tjbohn/tools/disagg_veghist_monthly2hourly_nc.py -i $indir/$file -s $startyear -e $endyear -o $outdir/$outfile";
+  $cmd = "python disagg_veghist_monthly2hourly_nc.py -i $indir/$file -s $startyear -e $endyear -o $outdir/$outfile";
   (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
 }
 closedir(DIR);
