@@ -193,7 +193,7 @@ if ($do_stage{1}) {
       @pfxs = ($prefix_LAI,$prefix_NDVI,$prefix_albedo);
       @missions = ($mission_LAI,$mission_NDVI,$mission_albedo);
 
-      # Download files (and dump to ascii as workaround for python hdf not cooperating)
+      # Download files
       for ($i=0; $i<3; $i++) {
         $index = "$dirs[$i]/$subdir/index.html";
         for ($j=0; $j<$nTiles; $j++) {
