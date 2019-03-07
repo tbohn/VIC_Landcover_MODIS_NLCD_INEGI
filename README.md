@@ -9,7 +9,7 @@ This project contains the scripts used to created MODIS-based land surface param
 4. provide improved, spatially explicit estimates of time-varying surface properties (LAI, canopy fraction, albedo) over the domain
 5. provide values of these properties for a wider range of classes such as urban, which had been ignored in prior parameter sets
 
-The VIC land surface parameters consist of gridded values of: soil properties, fractional area coverage of land cover classes, and physical properties of the surface and vegetation structure for each class. Thus, to achieve the project's goals required new land cover classifications (both to update the map and to obtain multi-decadal snapshots of land cover change) and gridded observations of surface properties. These surface properties needed to be aggregated over the pixels of the land cover maps to yield separate spatial average values for each land cover class in each grid cell.
+The VIC land surface parameters consist of gridded values of: soil properties, fractional area coverage of land cover classes, and physical properties of the surface and vegetation structure for each class. Thus, to achieve the project's goals required new land cover classifications (both to update the map and to obtain multi-decadal snapshots of land cover change) and gridded observations of surface properties. These surface properties needed to be aggregated over the pixels of the land cover maps to yield separate spatial average values for each land cover class in each grid cell. Soil properties were not changed, but rather were taken from the L2015 dataset.
 
 The chosen domain was the continental US, Mexico, and southern Canada (the CONUS + Mexico, or CONUS_MX domain), at 1/16 degree (6 km) spatial resolution. This is the domain used in the Livneh et al (2015) (L2015 hereafter) gridded daily meteorology dataset, and these parameters are designed to be compatible with that dataset.
 
@@ -18,13 +18,13 @@ The processing steps covered by the scripts in this dataset are:
 1. Downloading of MODIS data
 2. Aggregation of MODIS land surface properties over the desired land cover classification
 3. Gap-filling
-4. Replacement of the L2015 land cover fractions and land surface properties with the MOD-LSP values
+4. Replacement of the L2015 land cover fractions and land surface properties with the MOD-LSP values (but retaining the original soil parameters)
 
 In addition, there are various utility scripts (e.g., clipping to smaller region of interest, subsampling, etc).
 
 ## Inputs:
 ### Land Cover Classifications:
- - MOD12Q1.005 MODIS-based classification of Friedl et al (2010) at 500-m resolution, for years 2001-2013.  This cand be downloaded from the [MODIS site](https://lpdaac.usgs.gov/dataset_discovery/modis).
+ - MOD12Q1.005 MODIS-based classification of Friedl et al (2010) at 500-m resolution, for years 2001-2013.  This can be downloaded from the [MODIS site](https://lpdaac.usgs.gov/dataset_discovery/modis).
  - NLCD_INEGI land cover classifications (Bohn and Vivoni 2019a) for years 1992, 2001, and 2011. These are a combination of the National Land Cover Database (NLCD; Homer et al., 2015) over the United States and a modification of the INEGI Uso del Suelo y Vegetacion (INEGI, 2014) classification over Mexico that was harmonized with the NLCD legend. These are available for download at [Zenodo](https://zenodo.org/record/2580428).
 
 ### Land Surface Properties:
@@ -35,12 +35,12 @@ MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_disc
 
 ### Miscellaneous Files:
  - NetCDF format VIC-5 image driver parameter file from the L2015 simulations (soil parameters were taken directly from this file) available from [Zenodo](https://zenodo.org/record/2564019)
- - Land cover class tables listing the classes in the underlying classification, along with ID codes and flags indicating how each class should be processed (examples of which are included in the ./examples directory)
+ - Land cover class tables listing the classes in the underlying classification, along with ID codes and flags indicating how each class should be processed (examples of which are included in the examples/inputs/ directory)
 
 ## Outputs:
  - Several versions of land cover parameters for the VIC land surface model, available for download from [Zenodo](https://zenodo.org/record/2559631).
 
-These parameter files were designed for use with VIC 5 (image driver). VIC 5 image driver requires a "domain" file to accompany the parameter file. This domain file is also necessary for disaggregating the daily gridded meteorological forcings to hourly for input to VIC via the disaggregating tool MetSim (https://github.com/UW-Hydro/MetSim).  We have provided a domain file compatible with the L2015 forcings and the MOD-LSP parameters, on Zenodo (https://zenodo.org/record/2564019).
+These parameter files were designed for use with VIC 5 (image driver). VIC 5 image driver requires a "domain" file to accompany the parameter file. This domain file is also necessary for disaggregating the daily gridded meteorological forcings to hourly for input to VIC via the disaggregating tool [MetSim](https://github.com/UW-Hydro/MetSim).  We have provided a domain file compatible with the L2015 forcings and the MOD-LSP parameters, on [Zenodo](https://zenodo.org/record/2564019).
 
 
 ## Directory Structure:
@@ -60,4 +60,4 @@ examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - outputs/ - intermediate and final output files for the example
 
 tools/ - processing scripts are stored here; for details, see the files under docs/
- - scripts for aggregating MODIS data over land cover maps and generation of VIC parameter files
+ - scripts for aggregating MODIS data over land cover maps and generation of VIC parameter files; also general utility scripts
