@@ -76,7 +76,13 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
    `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid  
    `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid  
 
-6. Downloading of MODIS land surface properties and aggregation over the land cover classification
+6. (Optional) Obtain the NLCD_INEGI land cover classification(s)
+
+   You can download the NLCD_INEGI land cover classifications from [Zenodo](https://zenodo.org/record/2580428).
+
+   I created a "NLCD_INEGI" subdirectory under "LandCover" (next to the "MODIS" subdirectory). Extract the NLCD_INEGI tar files to here.
+
+7. Downloading of MODIS land surface properties and aggregation over the land cover classification
 
    After you have downloaded the index.html files, you can then run scripts to download the hdf files:
 
