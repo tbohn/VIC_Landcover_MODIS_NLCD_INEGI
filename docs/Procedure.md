@@ -14,7 +14,7 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    where
 
-  `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"
+   `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"
 
 4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.htm" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
 
@@ -25,7 +25,9 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
    `$TERRA_AQUA` = "MOLA" for "MOD" products, and "MOTA" for "MCD" products  
    `$PRODUCT` = product code, e.g. MOD15A2H.006
 
-   This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of $YYYY.$MM.$DD, where $YYYY = 4-digit year, $MM = 2-digit month, and $DD = 2-digit day. Each of these contains and index.htm file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.htm files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing "kill -9 $PID" where $PID = numeric process id associated with the desired wget instance.
+   Note: you might need to also include the username and password as extra arguments to wget. Do `wget --help` for more details on how to do it.
+
+   This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of `e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT` under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of `$YYYY.$MM.$DD`, where `$YYYY` = 4-digit year, `$MM` = 2-digit month, and `$DD` = 2-digit day. Each of these contains and index.htm file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.htm files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing `kill -9 $PID` where `$PID` = numeric process id associated with the desired wget instance.
 
    The MODIS hdf filenames follow the convention
 
@@ -33,25 +35,27 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    where
 
-   `$PROD` = the first part of $PRODUCT, e.g., MOD15A2H  
+   `$PROD` = the first part of `$PRODUCT`, e.g., MOD15A2H  
    `$YYYY` = 4-digit year of acquisition  
    `$MM` = 2-digit month of acquisition  
    `$DD` = 2-digit day of acquisition  
    `$COL` = 2-digit column of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)  
    `$ROW` = 2-digit row of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)  
-   `$COLLECTION` = the 2nd part of $PRODUCT, e.g., 006  
+   `$COLLECTION` = the 2nd part of `$PRODUCT`, e.g., 006  
    `$FILEDATE` = 13-digit date/time code for the file (corresponding to when the file was generated, NOT acquisition date
 
- - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh
-   - Calls wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel for a specified range of 10x10 tiles
+5. After you have downloaded the index.htm files, you can then run scripts to download the hdf files:
 
- - wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel
-   - Loops over the specified range of 10x10 tiles that are in the specified domain and calls a separate instance of wrap_download_join_and_agg_MODIS_over_landcover.pl in the background, i.e., in parallel, for each 10x10 tile
+ - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
+   - This is an example batch script that contains a command line run of `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`, with all the necessary arguments, for a specified set of 10x10 tiles
 
- - wrap_download_join_and_agg_MODIS_over_landcover.pl
-   - calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls join_and_agg_MODIS_over_landcover.py
+ - `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`
+   - Loops over the specified range of 10x10 tiles that are in the specified domain and calls a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
 
- - join_and_agg_MODIS_over_landcover.py
+ - `wrap_download_join_and_agg_MODIS_over_landcover.pl`
+   - Calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`
+
+ - `join_and_agg_MODIS_over_landcover.py`
    - aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  Note: this script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels!); and it computes Fcanopy from NDVI.  No land cover classes are omitted.  You have to supply a table describing, for each land cover class, how it should handle the QC flags and whether it should generate LAI from the NDVI-LAI relationship.  Note also that the MODIS land cover map is something I created - for each pixel, I took the "mode" PFT over all years that the map was produced (2001-2013).  I can give more info on that if you need.
 
 After the aggregation is complete, the large MODIS files can be discarded.
