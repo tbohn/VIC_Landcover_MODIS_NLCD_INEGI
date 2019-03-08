@@ -54,14 +54,14 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    where
 
-   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01
-   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01
-   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid
-   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid
-   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid
-   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid
-   `$USERNAME` = your NASA Earthdata username
-   `$PASSWORD` = your NASA Earthdata password
+   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01  
+   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01  
+   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid  
+   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid  
+   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid  
+   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid  
+   `$USERNAME` = your NASA Earthdata username  
+   `$PASSWORD` = your NASA Earthdata password  
 
    Once you have downloaded the MCD12Q1.051 hdf files, run the following script to find the most frequent (mode) class for each pixel across all acquisition dates:
 
@@ -69,12 +69,12 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    where
 
-   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01
-   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01
-   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid
-   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid
-   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid
-   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid
+   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01  
+   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01  
+   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid  
+   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid  
+   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid  
+   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid  
 
 6. Downloading of MODIS land surface properties and aggregation over the land cover classification
 
