@@ -50,8 +50,7 @@ These parameter files were designed for use with VIC 5 (image driver). VIC 5 ima
  - README.md - this file
 
 docs/
- - Overview.md - overview of whole project
- - Scripts.md - list of scripts, including description and usage
+ - Scripts.md - list of scripts
  - Procedure.md - list of processing steps
 
 examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
