@@ -18,37 +18,39 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
 4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.htm" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
 
-...   wget -r -P . https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT
+      wget -r -P . https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT
 
    where
 
-...   $TERRA_AQUA = "MOLA" for "MOD" products, and "MOTA" for "MCD" products
+  4.a. fll
 
-...   $PRODUCT = product code, e.g. MOD15A2H.006
+      $TERRA_AQUA = "MOLA" for "MOD" products, and "MOTA" for "MCD" products
+
+      $PRODUCT = product code, e.g. MOD15A2H.006
 
    This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of $YYYY.$MM.$DD, where $YYYY = 4-digit year, $MM = 2-digit month, and $DD = 2-digit day. Each of these contains and index.htm file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.htm files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing "kill -9 $PID" where $PID = numeric process id associated with the desired wget instance.
 
    The MODIS hdf filenames follow the convention
 
-...   $PROD.A$YYYY$MM$DD.h$COLv$ROW.$COLLECTION.$FILEDATE.hdf
+      $PROD.A$YYYY$MM$DD.h$COLv$ROW.$COLLECTION.$FILEDATE.hdf
 
    where
 
-...   $PROD = the first part of $PRODUCT, e.g., MOD15A2H
+      $PROD = the first part of $PRODUCT, e.g., MOD15A2H
 
-...   $YYYY = 4-digit year of acquisition
+      $YYYY = 4-digit year of acquisition
 
-...   $MM = 2-digit month of acquisition
+      $MM = 2-digit month of acquisition
 
-...   $DD = 2-digit day of acquisition
+      $DD = 2-digit day of acquisition
 
-...   $COL = 2-digit column of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)
+      $COL = 2-digit column of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)
 
-...   $ROW = 2-digit row of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)
+      $ROW = 2-digit row of the tile (see map at https://lpdaac.usgs.gov/dataset_discovery/modis)
 
-...   $COLLECTION = the 2nd part of $PRODUCT, e.g., 006
+      $COLLECTION = the 2nd part of $PRODUCT, e.g., 006
 
-...   $FILEDATE = 13-digit date/time code for the file (corresponding to when the file was generated, NOT acquisition date
+      $FILEDATE = 13-digit date/time code for the file (corresponding to when the file was generated, NOT acquisition date
 
  - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh
    - Calls wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel for a specified range of 10x10 tiles
