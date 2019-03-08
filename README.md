@@ -50,8 +50,8 @@ These parameter files were designed for use with VIC 5 (image driver). VIC 5 ima
  - README.md - this file
 
 docs/
- - Scripts.md - list of scripts
- - Procedure.md - list of processing steps
+ - [Scripts.md](./docs/Scripts.md) - list of scripts
+ - [Procedure.md](./docs/Procedure.md) - list of processing steps
 
 examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - batch.process_one_tile.40_50n.130_120e.sh - linux shell script that contains the commands for processing an example 10x10 tile

@@ -10,15 +10,16 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
 3. Under the "MODIS" directory, create the following subdirectories: "LAI", "NDVI", and "albedo". If you also anticipate using the MOD12Q1.051 or MCD12Q1.051 land cover classifications, create a subdirectory called "PFT" (for plant functional type) or something similar (I used "PFT").
 
- - cd MODIS/<SUBDIRECTORY>
+ - cd MODIS/<SUBDIR>/
 
-where <SUBDIRECTORY> is one of "LAI", "NDVI", "albedo", or "PFT"
+...where <SUBDIR> is one of "LAI", "NDVI", "albedo", or "PFT"
 
 4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.htm" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
 
- - wget -r -P . https://e4ftl01.cr.usgs.gov/<TERRA_AQUA>/<PRODUCT>
+ - wget -r -P . https://e4ftl01.cr.usgs.gov/<TERRA_AQUA>/<PRODUCT>/
 
-where
+...where
+
  - <TERRA_AQUA> = "MOLA" for "MOD" products, and "MOTA" for "MCD" products
  - <PRODUCT> = product code, e.g. MOD15A2H.006
 
