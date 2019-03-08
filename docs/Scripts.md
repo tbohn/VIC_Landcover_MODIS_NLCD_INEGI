@@ -3,6 +3,7 @@
 ## 1. Downloading MODIS Data
 
 ## 2. Preparing the MOD12Q1.005 Land Cover Classification
+ - download_MODIS.pl
  - find_mode_MODIS_PFT.py
 
  - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh

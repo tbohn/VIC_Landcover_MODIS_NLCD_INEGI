@@ -16,18 +16,18 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"
 
-4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.htm" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
+4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.html" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
 
-   `wget -r -P . https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT`
+   `wget -r -P . --http-user=$USERNAME --http-password=$PASSWORD https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT`
 
    where
 
    `$TERRA_AQUA` = "MOLA" for "MOD" products, and "MOTA" for "MCD" products  
    `$PRODUCT` = product code, e.g. MOD15A2H.006
+   `$USERNAME` = your NASA Earthdata username
+   `$PASSWORD` = your NASA Earthdata password
 
-   Note: you might need to also include the username and password as extra arguments to wget. Do `wget --help` for more details on how to do it.
-
-   This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of `e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT` under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of `$YYYY.$MM.$DD`, where `$YYYY` = 4-digit year, `$MM` = 2-digit month, and `$DD` = 2-digit day. Each of these contains and index.htm file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.htm files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing `kill -9 $PID` where `$PID` = numeric process id associated with the desired wget instance.
+   This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of `e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT` under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of `$YYYY.$MM.$DD`, where `$YYYY` = 4-digit year, `$MM` = 2-digit month, and `$DD` = 2-digit day. Each of these contains and index.html file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.html files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing `kill -9 $PID` where `$PID` = numeric process id associated with the desired wget instance.
 
    The MODIS hdf filenames follow the convention
 
@@ -46,13 +46,39 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
 5. (Optional) Downloading and preparing MCD12Q1.051 land cover classification
 
-If you wish to use the MCD12Q1.051 product as the underlying land cover classification, you will need to download this separately from the other MODIS products.
+   If you wish to use the MCD12Q1.051 product as the underlying land cover classification, you will need to download this separately from the other MODIS products.
 
-(information on scripts here)
- - download_MODIS.pl
- - find_mode_MODIS_PFT.py
+   Once you have created the "MODIS/PFT" directory and done an initial wget to obtain the index.html files, run the following script to download the MODIS data:
 
-6. After you have downloaded the index.htm files, you can then run scripts to download the hdf files:
+   `download_MODIS.pl MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $USERNAME $PASSWORD`
+
+   where
+
+   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01
+   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01
+   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid
+   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid
+   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid
+   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid
+   `$USERNAME` = your NASA Earthdata username
+   `$PASSWORD` = your NASA Earthdata password
+
+   Once you have downloaded the MCD12Q1.051 hdf files, run the following script to find the most frequent (mode) class for each pixel across all acquisition dates:
+
+   `wrap_find_mode_MODIS_PFT.pl MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX MODIS/PFT/mode_PFT MOD12Q1.mode`
+
+   where
+
+   `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01
+   `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01
+   `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid
+   `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid
+   `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid
+   `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid
+
+6. Downloading of MODIS land surface properties and aggregation over the land cover classification
+
+   After you have downloaded the index.html files, you can then run scripts to download the hdf files:
 
    `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
    - This is an example batch script that contains a command line run of `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`, with all the necessary arguments, for a specified set of 10x10 tiles
