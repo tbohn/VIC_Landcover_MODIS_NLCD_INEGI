@@ -1,8 +1,34 @@
 # Processing Steps for the VIC_Landcover_MODIS_NLCD_INEGI Project
 
-The processing is broken up into 10x10 degree (geographic projection) tiles.  For any given 10x10 tile, multiple MODIS sinusoidal projection tiles will overlap with the 10x10 tile (MODIS tiles are sort of rhomboidal, but they have north and south boundaries aligned with 10-degree latitude increments, so it's only the Eand W boundaries that mismatch with 10x10 tiles).
+The processing divides the domain into 10x10 degree (geographic projection) tiles.  For any given 10x10 tile, multiple MODIS sinusoidal projection tiles will overlap with the 10x10 tile (MODIS tiles are sort of rhomboidal, but they have north and south boundaries aligned with 10-degree latitude increments, so it's only the Eand W boundaries that mismatch with 10x10 tiles).
 
 ## Step 1: Download and aggregate MODIS files
+
+1. Create an account with NASA Earthdata. To obtain a NASA Earthdata Login account, visit https://urs.earthdata.nasa.gov/users/new/.
+
+2. Create a top-level directory on your machine, on a drive with sufficient space to hold the data that you will need (each MODIS sinusoidal tile for a single 8-day interval, at 500 m resolution, takes up about 8 MB for MCD15A2H.006 to 80 MB for MCD43A3.006; and there are 46 8-day intervals per year). Something like "MODIS".
+
+3. Under the "MODIS" directory, create the following subdirectories: "LAI", "NDVI", and "albedo". If you also anticipate using the MOD12Q1.051 or MCD12Q1.051 land cover classifications, create a subdirectory called "PFT" (for plant functional type) or something similar (I used "PFT").
+
+ - cd MODIS/<SUBDIRECTORY>
+
+where <SUBDIRECTORY> is one of "LAI", "NDVI", "albedo", or "PFT"
+
+4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.htm" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
+
+ - wget -r -P . https://e4ftl01.cr.usgs.gov/<TERRA_AQUA>/<PRODUCT>
+
+where
+ - <TERRA_AQUA> = "MOLA" for "MOD" products, and "MOTA" for "MCD" products
+ - <PRODUCT> = product code, e.g. MOD15A2H.006
+
+This will create a subdirectory of e4ftl01.cr.usgs.gov/<TERRA_AQUA>/<PRODUCT> with all of the necessary index files. It will unfortunately also create directories for other MODIS products; when it starts downloading index files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing "kill -9 <PID>" where <PID> = numeric process id associated with the desired wget instance.
+
+The scripts are designed around downloading the MODIS tiles via "wget", which downloads them in the same directory structure that exists on the MODIS data pool site (https://e4ftl01.cr.usgs.gov).
+
+
+The MODIS hdf filenames follow the convention
+ot only the coordinates of The first step is to manually run "wget" to download the index files from the MODIS ftp site. This is ^I
 
  - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh
    - Calls wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel for a specified range of 10x10 tiles
