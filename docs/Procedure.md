@@ -46,17 +46,11 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
 5. After you have downloaded the index.htm files, you can then run scripts to download the hdf files:
 
- - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
+   `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
    - This is an example batch script that contains a command line run of `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`, with all the necessary arguments, for a specified set of 10x10 tiles
-
- - `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`
-   - Loops over the specified range of 10x10 tiles that are in the specified domain and calls a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
-
- - `wrap_download_join_and_agg_MODIS_over_landcover.pl`
-   - Calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`
-
- - `join_and_agg_MODIS_over_landcover.py`
-   - aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  Note: this script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels!); and it computes Fcanopy from NDVI.  No land cover classes are omitted.  You have to supply a table describing, for each land cover class, how it should handle the QC flags and whether it should generate LAI from the NDVI-LAI relationship.  Note also that the MODIS land cover map is something I created - for each pixel, I took the "mode" PFT over all years that the map was produced (2001-2013).  I can give more info on that if you need.
+   - `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel` loops over the specified range of 10x10 tiles that are in the specified domain and calls a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
+   - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`
+   - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  Note: this script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels!); and it computes Fcanopy from NDVI.  No land cover classes are omitted.  You have to supply a table describing, for each land cover class, how it should handle the QC flags and whether it should generate LAI from the NDVI-LAI relationship.  Note also that the MODIS land cover map is something I created - for each pixel, I took the "mode" PFT over all years that the map was produced (2001-2013).  I can give more info on that if you need.
 
 After the aggregation is complete, the large MODIS files can be discarded.
 
