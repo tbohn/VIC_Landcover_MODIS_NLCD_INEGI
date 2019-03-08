@@ -22,7 +22,7 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    where
 
-  4.a. fll
+  100. fll
 
       $TERRA_AQUA = "MOLA" for "MOD" products, and "MOTA" for "MCD" products
 
