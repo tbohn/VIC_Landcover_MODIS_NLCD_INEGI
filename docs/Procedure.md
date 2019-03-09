@@ -1,8 +1,8 @@
 # Processing Steps for the VIC_Landcover_MODIS_NLCD_INEGI Project
 
-The processing divides the domain into 10x10 degree (geographic projection) tiles.  For any given 10x10 tile, multiple MODIS sinusoidal projection tiles will overlap with the 10x10 tile (MODIS tiles are sort of rhomboidal, but they have north and south boundaries aligned with 10-degree latitude increments, so it's only the E and W boundaries that mismatch with 10x10 tiles).
-
 To use these scripts, make sure that the path to the "tools" directory is in your `$PATH` environment variable.
+
+Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, broken up into "tiles" that are roughly equal-area (see map at https://lpdaac.usgs.gov/dataset_discovery/modis). The tiles have north and south boundaries that correspond to 10-degree latitude intervals, but the east and west boundaries are slanted at various angles (relative to a geographic projection) depending on how far from the Greenwich meridian they are. So pixels in these files occur in rows that occur at regular latitude intervals, but within the rows, the pixels are not regularly spaced with respect to longitude (farther apart further from the equator).
 
 ## Stage 1: Download and aggregate MODIS files
 
@@ -121,7 +121,7 @@ To use these scripts, make sure that the path to the "tools" directory is in you
    `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
    `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"  
    `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)  
-   This script has 2 stages; 1. download the MODIS data; 2. aggregate over the land cover classificaton. Once stage 1 has completed successfully, running this script again will not re-run stage 1 unless `$FORCE` is set to 1.
+   This script has 2 stages; 1. download the MODIS data (and figure out which MODIS tiles correspond to the region of interest); 2. aggregate over the land cover classificaton. Once stage 1 has completed successfully, running this script again will not re-run stage 1 unless `$FORCE` is set to 1.
 
    Variables that start with "LC" refer to the land cover classification. `$STARTYEAR` etc through `$PIX_PER_DEG` refer to the MODIS land surface observation time series. `$COARSE_MASK` is the filename of a mask over the domain at 10-degree resolution, for the purpose of breaking up large domains into smaller pieces and processing those pieces in parallel. if `$COARSE_MASK` is "null", the domain will not be divided into 10x10 degree tiles, but instead will be processed as a single region in one processing stream. `$LATMIN` through `$LONMAX` describe the geographic bounds of the region to be processed (if supplying non-null `$COARSE_MASK`, then these bounds must coincide with boundaries of 10x10 degree tiles). Output files (1 file per 10x10 degree tile if `$COARSE_MASK` is non-null) will be written to `$AGGROOT/$LCTYPE/$LCID/aggregated/`.
 
