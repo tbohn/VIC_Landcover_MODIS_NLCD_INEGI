@@ -105,12 +105,12 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
    `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
    `$LCPFX` = prefix of land cover classification files, either "MCD12Q1" or "nlcd_inegi"  
-   `$LC_TABLE` = table listing land cover classes and their processing options  
+   `$LC_TABLE` = table listing land cover classes and their processing options; these can be found in the `data/$DOMAIN` directories  
    `$DOMAIN` = domain name, either "CONUS_MX" or "USMX" (NLCD_INEGI only covers the USMX domain)  
-   `$LANDMASK` = domain mask at the output resolution  
+   `$LANDMASK` = domain mask at the output resolution; land mask files can be found in the `data/$DOMAIN` directories  
    `$STARTYEAR` = first year of MODIS land surface observations to process (I used 2000)  
    `$ENDYEAR` = last year of MODIS land surface observations to process (I used 2016)  
-   `$COARSE_MASK` = either the filename of a mask of 10x10 degree tiles (geographic, not sinusoidal) covering the domain, or "null" to just process the whole domain as a single file  
+   `$COARSE_MASK` = either the filename of a mask of 10x10 degree tiles (geographic, not sinusoidal) covering the domain, or "null" to just process the whole domain as a single file; coarse masks can be found in the `data/$DOMAIN` directories  
    `$LATMIN` = southern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the southern edge of the southernmost tile that you want to process)  
    `$LATMAX` = northern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the northern edge of the northernmost tile that you want to process)  
    `$LONMIN` = western boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the western edge of the westernmost tile that you want to process)  

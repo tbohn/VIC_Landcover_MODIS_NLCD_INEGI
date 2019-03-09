@@ -1,1 +1,0 @@
-wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel modis mode_PFT CONUS_MX 2000 2016 30 40 -180 0 240 0.0625 /media/tjbohn/Data/data/VegHist/MODIS_MODIS/mode_PFT/aggregated veg_hist 0 &> log.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.txt 
