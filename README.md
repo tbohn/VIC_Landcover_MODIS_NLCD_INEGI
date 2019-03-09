@@ -53,10 +53,18 @@ docs/
  - [Scripts.md](./docs/Scripts.md) - list of scripts
  - [Procedure.md](./docs/Procedure.md) - list of processing steps
 
+!!! Remove Examples?
+
 examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - batch.process_one_tile.40_50n.130_120e.sh - linux shell script that contains the commands for processing an example 10x10 tile
  - inputs/ - input files for the example
  - outputs/ - intermediate and final output files for the example
+
+data/ - input files other than the land cover classifications or MODIS observations, e.g., masks, tables of class-specific properties
+ - CONUS_MX/ - data for CONUS_MX domain
+ - USMX/ - data for USMX domain
+
+!!! fix this
 
 tools/ - processing scripts are stored here; for details, see the files under docs/
  - scripts for aggregating MODIS data over land cover maps and generation of VIC parameter files; also general utility scripts
