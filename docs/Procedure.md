@@ -22,12 +22,12 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    where
 
-   `$MODISROOT` = the top-level directory for MODIS data
-   `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"
+   `$MODISROOT` = the top-level directory for MODIS data  
+   `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"  
    `$TERRA_AQUA` = "MOLA" for "MOD" products, and "MOTA" for "MCD" products  
-   `$PRODUCT` = product code, e.g. MOD15A2H.006
-   `$USERNAME` = your NASA Earthdata username
-   `$PASSWORD` = your NASA Earthdata password
+   `$PRODUCT` = product code, e.g. MOD15A2H.006  
+   `$USERNAME` = your NASA Earthdata username  
+   `$PASSWORD` = your NASA Earthdata password  
 
    This "wget" command will copy the directory structure of the data pool onto your machine, creating a subdirectory of `e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT` under your current directory, containing further subdirectories corresponding to all available 8-day intervals with a format of `$YYYY.$MM.$DD`, where `$YYYY` = 4-digit year, `$MM` = 2-digit month, and `$DD` = 2-digit day. Each of these contains and index.html file listing all available .hdf files that can be downloaded. It will unfortunately also create directories for other MODIS products; when it starts downloading index.html files from the other products, you should kill the wget command via ctrl-C (if running in the foreground) or by doing `kill -9 $PID` where `$PID` = numeric process id associated with the desired wget instance.
 
@@ -72,7 +72,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    Run the following script to find the most frequent (mode) class for each pixel across all acquisition dates:
 
-   `wrap_find_mode_MODIS_PFT.pl $MODISROOT/MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $LCROOT/MODIS/mode_PFT MOD12Q1.mode`
+   `wrap_find_mode_MODIS_PFT.pl $MODISROOT/MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $LCROOT/MODIS/mode_PFT MCD12Q1.mode`
 
    where
 
@@ -110,7 +110,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$LANDMASK` = domain mask at the output resolution  
    `$STARTYEAR` = first year of MODIS land surface observations to process (I used 2000)  
    `$ENDYEAR` = last year of MODIS land surface observations to process (I used 2016)  
-   `$COARSE_MASK` = either the filename of a mask of 10x10 degree tiles covering the domain, or "null" to just process the whole domain as a single file  
+   `$COARSE_MASK` = either the filename of a mask of 10x10 degree tiles (geographic, not sinusoidal) covering the domain, or "null" to just process the whole domain as a single file  
    `$LATMIN` = southern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the southern edge of the southernmost tile that you want to process)  
    `$LATMAX` = northern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the northern edge of the northernmost tile that you want to process)  
    `$LONMIN` = western boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the western edge of the westernmost tile that you want to process)  
@@ -121,6 +121,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
    `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"  
    `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)  
+
    This script has 2 stages; 1. download the MODIS data (and figure out which MODIS tiles correspond to the region of interest); 2. aggregate over the land cover classificaton. Once stage 1 has completed successfully, running this script again will not re-run stage 1 unless `$FORCE` is set to 1.
 
    Variables that start with "LC" refer to the land cover classification. `$STARTYEAR` etc through `$PIX_PER_DEG` refer to the MODIS land surface observation time series. `$COARSE_MASK` is the filename of a mask over the domain at 10-degree resolution, for the purpose of breaking up large domains into smaller pieces and processing those pieces in parallel. if `$COARSE_MASK` is "null", the domain will not be divided into 10x10 degree tiles, but instead will be processed as a single region in one processing stream. `$LATMIN` through `$LONMAX` describe the geographic bounds of the region to be processed (if supplying non-null `$COARSE_MASK`, then these bounds must coincide with boundaries of 10x10 degree tiles). Output files (1 file per 10x10 degree tile if `$COARSE_MASK` is non-null) will be written to `$AGGROOT/$LCTYPE/$LCID/aggregated/`.
@@ -132,9 +133,11 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`  
    - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  This script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels); and it computes Fcanopy from NDVI.  
 
-After the aggregation is complete, the large MODIS files can be discarded.
+   After the aggregation is complete, the large MODIS input files can be discarded.
 
+!!! where to mention this?
    `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
+
 ## Stage 2: Gap-filling and other post-processing
 
  - batch.wrap_process_veg_hist.pl.PR.2001.csh
