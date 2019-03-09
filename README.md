@@ -35,7 +35,7 @@ MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_disc
 
 ### Miscellaneous Files:
  - NetCDF format VIC-5 image driver parameter file from the L2015 simulations (soil parameters were taken directly from this file) available from [Zenodo](https://zenodo.org/record/2564019)
- - Land cover class tables listing the classes in the underlying classification, along with ID codes and flags indicating how each class should be processed (examples of which are included in the examples/inputs/ directory)
+ - Land masks, tables listing land cover classes and class-specific properties (under the data/ directory)
 
 ## Outputs:
  - Several versions of land cover parameters for the VIC land surface model, available for download from [Zenodo](https://zenodo.org/record/2559631) (Bohn and Vivoni, 2019a).
@@ -53,8 +53,6 @@ docs/
  - [Scripts.md](./docs/Scripts.md) - list of scripts
  - [Procedure.md](./docs/Procedure.md) - list of processing steps
 
-!!! Remove Examples?
-
 examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
  - batch.process_one_tile.40_50n.130_120e.sh - linux shell script that contains the commands for processing an example 10x10 tile
  - inputs/ - input files for the example
@@ -64,10 +62,7 @@ data/ - input files other than the land cover classifications or MODIS observati
  - CONUS_MX/ - data for CONUS_MX domain
  - USMX/ - data for USMX domain
 
-!!! fix this
-
-tools/ - processing scripts are stored here; for details, see the files under docs/
- - scripts for aggregating MODIS data over land cover maps and generation of VIC parameter files; also general utility scripts
+tools/ - scripts for aggregating MODIS data over land cover maps and generation of VIC parameter files; also general utility scripts
 
 ## References
  - Bennett, A., J. J. Hamman, B. Nijssen, E. A. Clark, and K. M. Andreadis, 2018: UW-Hydro/MetSim: Version 1.1.0 (version 1.1.0). Zenodo, doi:10.5281/zenodo.1256120. http://doi.org/10.5281/zenodo.1256120 (Accessed June 7, 2018).
