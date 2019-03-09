@@ -5,17 +5,16 @@ $lcrootdir = shift;
 $lctype = shift; # "MODIS" or "NLCD_INEGI"
 $lcid = shift; 
 $lcpfx = shift; 
-$lctable = shift; 
+$lc_table = shift; 
 $domain = shift;
-$coarse_tile_mask_file = shift;
 $landmask = shift;
 $startyear = shift;
 $endyear = shift;
-!!! maybe change this to make them the true bounds of domain at 10deg
-$latminmin_in = shift; # xxx
-$latminmax_in = shift;
-$lonminmin_in = shift;
-$lonminmax_in = shift;
+$coarse_tile_mask_file = shift; # can be null
+$latmin_in = shift; # southern boundary of region to process
+$latmax_in = shift; # northern boundary of region to process
+$lonmin_in = shift; # western boundary of region to process
+$lonmax_in = shift; # eastern boundary of region to process
 $pix_per_deg_y = shift; # modis pix_per_degree, = 240
 $resolution_out = shift; # in degrees
 $outdir = shift;
@@ -33,53 +32,58 @@ elsif ($lctype eq "NLCD_INEGI") {
 
 @varnames = ("LAI","NDVI","albedo");
 
-# Read coarse tile mask
-open(FILE,$coarse_tile_mask_file) or die "$0: ERROR: cannot open $coarse_tile_mask_file for reading\n";
-$row = 0;
-foreach (<FILE>) {
-  chomp;
-  @fields = split /\s+/;
-  if ($fields[0] =~ /ncols/) {
-    $ncols = $fields[1];
-  }
-  elsif ($fields[0] =~ /nrows/) {
-    $nrows = $fields[1];
-  }
-  elsif ($fields[0] =~ /xllcorner/) {
-    $xllcorner = $fields[1];
-  }
-  elsif ($fields[0] =~ /yllcorner/) {
-    $yllcorner = $fields[1];
-  }
-  elsif ($fields[0] =~ /cellsize/) {
-    $cellsize = $fields[1];
-  }
-  elsif ($fields[0] =~ /nodata/) {
-    $nodata = $fields[1];
-  }
-  else {
-    for ($col=0; $col<$ncols; $col++) {
-      $coarse_tile_mask[$nrows-1-$row][$col] = $fields[$col];
+if ($coarse_tile_mask_file ne "null") {
+
+  # Read coarse tile mask
+  open(FILE,$coarse_tile_mask_file) or die "$0: ERROR: cannot open $coarse_tile_mask_file for reading\n";
+  $row = 0;
+  foreach (<FILE>) {
+    chomp;
+    @fields = split /\s+/;
+    if ($fields[0] =~ /ncols/) {
+      $ncols = $fields[1];
     }
-    $row++;
+    elsif ($fields[0] =~ /nrows/) {
+      $nrows = $fields[1];
+    }
+    elsif ($fields[0] =~ /xllcorner/) {
+      $xllcorner = $fields[1];
+    }
+    elsif ($fields[0] =~ /yllcorner/) {
+      $yllcorner = $fields[1];
+    }
+    elsif ($fields[0] =~ /cellsize/) {
+      $cellsize = $fields[1];
+    }
+    elsif ($fields[0] =~ /nodata/) {
+      $nodata = $fields[1];
+    }
+    else {
+      for ($col=0; $col<$ncols; $col++) {
+        $coarse_tile_mask[$nrows-1-$row][$col] = $fields[$col];
+      }
+      $row++;
+    }
   }
+  close(FILE);
+
 }
-close(FILE);
-$latminmin = $yllcorner;
-$lonminmin = $xllcorner;
-$nLats = $nrows;
-$nLons = $ncols;
+else {
+
+  $nrows = 1;
+  $ncols = 1;
+}
 
 # get lists of MODIS tiles to download and process
-if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+if ($coarse_tile_mask_file ne "null") {
   # define hvs for each 10x10 tile
-  for ($i=0; $i<$nLats; $i++) {
-    $lat = $latminmin + ($nLats-1-$i)*10;
-    for ($j=0; $j<$nLons; $j++) {
+  for ($i=0; $i<$nrows; $i++) {
+    $lat = $yllcorner + ($nrows-1-$i)*10;
+    for ($j=0; $j<$ncols; $j++) {
       if (!$coarse_tile_mask[$i][$j]) { next; }
       # could also just set $v equal to $i...
       $v_by_lat{$lat} = int((80-$lat)/10);
-      $lon = $lonminmin + 10*$j;
+      $lon = $xllcorner + 10*$j;
       $latmin = $lat;
       $latmax = $lat + 10;
       $lonmin = $lon;
@@ -100,60 +104,56 @@ if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain e
 }
 else {
   # define hvs for the specified latlon box
-  ($hmin, $hmax, $vmin, $vmax) = &compute_hv_bounds_around_latlon_box($boxlatmin,$boxlatmax,$boxlonmin,$boxlonmax,$pix_per_deg_y);
-  $v_by_lat{$boxlatmin} = $vmin;
-  $hmin_by_latlon{$boxlatmin}{$boxlonmin} = $hmin;
-  $hmax_by_latlon{$boxlatmin}{$boxlonmin} = $hmax;
+  ($hmin, $hmax, $vmin, $vmax) = &compute_hv_bounds_around_latlon_box($latmin_in,$latmax_in,$lonmin_in,$lonmax_in,$pix_per_deg_y);
+  $v_by_lat{$latmin_in} = $vmin;
+  $hmin_by_latlon{$latmin_in}{$lonmin_in} = $hmin;
+  $hmax_by_latlon{$latmin_in}{$lonmin_in} = $hmax;
   @tmplist = ();
   for ($h=$hmin; $h<=$hmax; $h++) {
     push @tmplist, $h;
   }
-  $h_by_latlon{$boxlatmin}{$boxlonmin} = @tmplist;
+  $h_by_latlon{$latmin_in}{$lonmin_in} = @tmplist;
   foreach $h (@tmplist) {
-    $valid_hs_by_v{$v_by_lat{$boxlatmin}}{$h} = 1;
+    $valid_hs_by_v{$v_by_lat{$latmin_in}}{$h} = 1;
   }
 }
   
 # loop over 10-deg bands (modis v) from South to North
-for ($i=$nLats-1; $i>=0; $i--) {
-  if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
-    $lat = $latminmin + ($nLats-1-$i)*10;
+for ($i=$nrows-1; $i>=0; $i--) {
+  if ($coarse_tile_mask_file ne "null") {
+    $lat = $yllcorner + ($nrows-1-$i)*10;
   }
   else {
-    $lat = $boxlatmin;
+    $lat = $latmin_in;
   }
   $v = $v_by_lat{$lat};
   $vstr = sprintf "%02d", $v;
 
-  if ($lat < $latminmin_in || $lat >= $latminmax_in) { next; }
+  if ($lat < $latmin_in || $lat > $latmax_in) { next; }
 
   # loop over 10x10 tiles
-  for ($j=0; $j<$nLons; $j++) {
-    if (!$coarse_tile_mask[$i][$j]) { next; }
-    if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
-      $lon = $lonminmin + 10*$j;
+  for ($j=0; $j<$ncols; $j++) {
+    if ($coarse_tile_mask_file ne "null") {
+      if (!$coarse_tile_mask[$i][$j]) { next; }
+      $lon = $xllcorner + 10*$j;
     }
     else {
-      $lon = $boxlonmin;
+      $lon = $lonmin_in;
     }
 
-    if ($lon < $lonminmin_in || $lon >= $lonminmax_in) { next; }
+    if ($lon < $lonmin_in || $lon > $lonmax_in) { next; }
 
     # download MODIS files and aggregate
-    if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
+    if ($coarse_tile_mask_file ne "null") {
       $latmax = $lat+10;
       $lonmax = $lon+10;
     }
     else {
-      $latmax = $boxlatmax;
-      $lonmax = $boxlonmax;
+      $latmax = $latmax_in;
+      $lonmax = $lonmax_in;
     }
     $script = "wrap_download_join_and_agg_MODIS_over_landcover.pl";
     $logfile = "log.$script.$domain.$lcid.$lat.$latmax.$lon.$lonmax.txt";
-#    $stagelist = "1";
-#    $cmd = "$script $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile";
-#    print "$cmd\n";
-#    (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
     $stagelist = "1,2";
     $cmd = "$script $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
     print "$cmd\n";

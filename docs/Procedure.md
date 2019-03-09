@@ -2,26 +2,28 @@
 
 The processing divides the domain into 10x10 degree (geographic projection) tiles.  For any given 10x10 tile, multiple MODIS sinusoidal projection tiles will overlap with the 10x10 tile (MODIS tiles are sort of rhomboidal, but they have north and south boundaries aligned with 10-degree latitude increments, so it's only the E and W boundaries that mismatch with 10x10 tiles).
 
+To use these scripts, make sure that the path to the "tools" directory is in your `$PATH` environment variable.
+
 ## Stage 1: Download and aggregate MODIS files
 
 1. Create an account with NASA Earthdata. To obtain a NASA Earthdata Login account, visit https://urs.earthdata.nasa.gov/users/new/.
 
 2. Create a top-level directory on your machine, on a drive with sufficient space to hold the data that you will need (each MODIS sinusoidal tile for a single 8-day interval, at 500 m resolution, takes up about 8 MB for MCD15A2H.006 to 80 MB for MCD43A3.006; and there are 46 8-day intervals per year). Something like "MODIS".
 
-3. Under the "MODIS" directory, create the following subdirectories: "LAI", "NDVI", and "albedo". If you also anticipate using the MCD12Q1.051 land cover classification, create a subdirectory called "PFT" (for plant functional type) or something similar (I used "PFT").
+  We will call the path above "MODIS" `$MODISROOT`.  So, now you have a directory called `$MODISROOT/MODIS`.
 
-   `cd MODIS/$SUBDIR`
+  Under `$MODISROOT/MODIS`, create the following subdirectories: "LAI", "NDVI", and "albedo".  If you also anticipate using the MCD12Q1.051 land cover classification, create a subdirectory called "PFT" (for plant functional type) to store the files for it.
+
+3. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.html" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
+
+   Then, run "wget" to download the index.html files.
+
+   `wget -r -P $MODISROOT/MODIS/$SUBDIR --http-user=$USERNAME --http-password=$PASSWORD https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT`
 
    where
 
+   `$MODISROOT` = the top-level directory for MODIS data
    `$SUBDIR` is one of "LAI", "NDVI", "albedo", or "PFT"
-
-4. Unfortunately, the MODIS sinusoidal tile filenames include the date/time on which they were published, which we can't just predict by any formula. I am not aware of a way to do wget with a wildcard like "*". So to download a subset of the files (say, all files for tile h08v05), we need to first download the "index.html" files that contain a list of all files in a given directory, and then parse those files with a perl script (see below) to get the specific filenames that we want to download:
-
-   `wget -r -P . --http-user=$USERNAME --http-password=$PASSWORD https://e4ftl01.cr.usgs.gov/$TERRA_AQUA/$PRODUCT`
-
-   where
-
    `$TERRA_AQUA` = "MOLA" for "MOD" products, and "MOTA" for "MCD" products  
    `$PRODUCT` = product code, e.g. MOD15A2H.006
    `$USERNAME` = your NASA Earthdata username
@@ -44,16 +46,19 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
    `$COLLECTION` = the 2nd part of `$PRODUCT`, e.g., 006  
    `$FILEDATE` = 13-digit date/time code for the file (corresponding to when the file was generated, NOT acquisition date
 
-5. (Optional) Downloading and preparing MCD12Q1.051 land cover classification
+   Once the downloads are finished, go to the tools directory.
+
+4. (Optional) Downloading and preparing MCD12Q1.051 land cover classification
 
    If you wish to use the MCD12Q1.051 product as the underlying land cover classification, you will need to download this separately from the other MODIS products.
 
-   Once you have created the "MODIS/PFT" directory and done an initial wget to obtain the index.html files, run the following script to download the MODIS data:
+   Once you have created the "$MODISROOT/MODIS/PFT" directory and done an initial wget to obtain the index.html files, run the following script to download the MODIS data:
 
-   `download_MODIS.pl MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $USERNAME $PASSWORD`
+   `download_MODIS.pl $MODISROOT/MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $USERNAME $PASSWORD`
 
    where
 
+   `$MODISROOT` = the top-level directory for MODIS data
    `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01  
    `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01  
    `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid  
@@ -63,66 +68,69 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
    `$USERNAME` = your NASA Earthdata username  
    `$PASSWORD` = your NASA Earthdata password  
 
-   Once you have downloaded the MCD12Q1.051 hdf files, run the following script to find the most frequent (mode) class for each pixel across all acquisition dates:
+   Once you have downloaded the MCD12Q1.051 hdf files, make sure you have a directory for storing land cover classifications. We will call it `$LCROOT`. Under `$LCROOT` there can be subdirectories for "MODIS", "NLCD_INEGI", etc.
 
-   `wrap_find_mode_MODIS_PFT.pl MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX MODIS/PFT/mode_PFT MOD12Q1.mode`
+   Run the following script to find the most frequent (mode) class for each pixel across all acquisition dates:
+
+   `wrap_find_mode_MODIS_PFT.pl $MODISROOT/MODIS/PFT/e4ftl01.cr.usgs.gov/MOTA/MCD12Q1.051 MCD12Q1 $STARTDATE $ENDDATE $HMIN $HMAX $VMIN $VMAX $LCROOT/MODIS/mode_PFT MOD12Q1.mode`
 
    where
 
+   `$MODISROOT` = the top-level directory for MODIS data
    `$STARTDATE` = earliest desired acquisition date; for MCD12Q1, I used 2001.01.01  
    `$ENDDATE` = latest desired acquisition date; for MCD12Q1, I used 2013.01.01  
    `$HMIN` = minimum desired column of the MODIS sinusoidal tile grid  
    `$HMAX` = maximum desired column of the MODIS sinusoidal tile grid  
    `$VMIN` = minimum desired row of the MODIS sinusoidal tile grid  
    `$VMAX` = maximum desired row of the MODIS sinusoidal tile grid  
+   `$LCROOT` = the top-level directory for land cover classifications
 
-6. (Optional) Obtain the NLCD_INEGI land cover classification(s)
+5. (Optional) Obtain the NLCD_INEGI land cover classification(s)
 
    You can download the NLCD_INEGI land cover classifications from [Zenodo](https://zenodo.org/record/2580428).
 
-   I created a "NLCD_INEGI" subdirectory under "LandCover" (next to the "MODIS" subdirectory). Extract the NLCD_INEGI tar files to that subdirectory.
+   Make sure you have a top-level directory for land cover classifications, which we will call `$LCROOT`. Make a subdirectory under this called "NLCD_INEGI". Store the NLCD_INEGI under there.
 
-7. Downloading of MODIS land surface properties and aggregation over the land cover classification
+6. Downloading of MODIS land surface properties and aggregation over the land cover classification
+
+   Make sure you have a top-level directory for storing and processing the aggregated MODIS observations, which we will call `$AGGROOT`.
 
    After you have downloaded the index.html files, you can then run the following script to download the hdf files and aggregate the data over the land cover classification:
 
-!!! Change this
-   `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel $LCFORMAT $LCID $DOMAIN $STARTYEAR $ENDYEAR $LATMIN $LATMAX $LONMIN $LONMAX $PIX_PER_DEG $OUT_RES $AGGROOT/$LCTYPE/$LCID/aggregated $OUTPFX $FORCE`
+   `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel $LCROOT $LCTYPE $LCID $LCPFX $LC_TABLE $DOMAIN $LANDMASK $STARTYEAR $ENDYEAR $COARSE_MASK $LATMIN $LATMAX $LONMIN $LONMAX $PIX_PER_DEG $OUT_RES $AGGROOT/$LCTYPE/$LCID/aggregated $OUTPFX $FORCE`
 
    where
 
-   `$LCFORMAT` = either "modis" (for MCD12Q1) or "asc" (for NLCD_INEGI)
-   `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)
-   `$STARTYEAR` = first year of MODIS land surface observations to process (I used 2000)
-   `$ENDYEAR` = last year of MODIS land surface observations to process (I used 2016)
-!!! Change this - latmax and lon max are actually latminmax and lonminmax
-!!! or change script to make the doc true
-   `$LATMIN` = minimum latitude to process; must be integer multiple of 10
-   `$LATMAX` = maximum latitude to process; must be integer multiple of 10
-   `$LONMIN` = minimum longitude to process; must be integer multiple of 10
-   `$LONMAX` = maximum longitude to process; must be integer multiple of 10
-   `$PIX_PER_DEG` = number of MODIS pixels per degree (for all products discussed here, it is 240)
-   `$OUT_RES` = output grid resolution in degrees (I used 0.0625)
-   `$AGGROOT` = path to top-level directory of the tree of output directories
-   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)
-   `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"
-   `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)
-
+   `$LCROOT` = path to top-level directory below which the land cover classifications are stored  
+   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
+   `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
+   `$LCPFX` = prefix of land cover classification files, either "MCD12Q1" or "nlcd_inegi"  
+   `$LC_TABLE` = table listing land cover classes and their processing options  
+   `$DOMAIN` = domain name, either "CONUS_MX" or "USMX" (NLCD_INEGI only covers the USMX domain)  
+   `$LANDMASK` = domain mask at the output resolution  
+   `$STARTYEAR` = first year of MODIS land surface observations to process (I used 2000)  
+   `$ENDYEAR` = last year of MODIS land surface observations to process (I used 2016)  
+   `$COARSE_MASK` = either the filename of a mask of 10x10 degree tiles covering the domain, or "null" to just process the whole domain as a single file  
+   `$LATMIN` = southern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the southern edge of the southernmost tile that you want to process)  
+   `$LATMAX` = northern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the northern edge of the northernmost tile that you want to process)  
+   `$LONMIN` = western boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the western edge of the westernmost tile that you want to process)  
+   `$LONMAX` = eastern boundary of region to process (if supplying a 10x10 tile mask, this should correspond to the eastern edge of the easternmost tile that you want to process)  
+   `$PIX_PER_DEG` = number of MODIS pixels per degree (for all products discussed here, it is 240)  
+   `$OUT_RES` = output grid resolution in degrees (I used 0.0625)  
+   `$AGGROOT` = path to top-level directory of the tree of output directories  
+   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
+   `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"  
+   `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)  
    This script has 2 stages; 1. download the MODIS data; 2. aggregate over the land cover classificaton. Once stage 1 has completed successfully, running this script again will not re-run stage 1 unless `$FORCE` is set to 1.
 
-   `$LCFORMAT`, `$LCID`, and `$LCTYPE` refer to the land cover classification. `$STARTYEAR` etc through `$PIX_PER_DEG` refer to the MODIS land surface observation time series. `$LATMIN` through `$LONMAX` describe the geographic bounds of the region to be processed, at 10x10 degree resolution, because the processing scripts divide the domain into 10x10 degree tiles. Output files (1 file per 10x10 degree tile) will be written to `$AGGROOT/$LCTYPE/$LCID/aggregated/`.
+   Variables that start with "LC" refer to the land cover classification. `$STARTYEAR` etc through `$PIX_PER_DEG` refer to the MODIS land surface observation time series. `$COARSE_MASK` is the filename of a mask over the domain at 10-degree resolution, for the purpose of breaking up large domains into smaller pieces and processing those pieces in parallel. if `$COARSE_MASK` is "null", the domain will not be divided into 10x10 degree tiles, but instead will be processed as a single region in one processing stream. `$LATMIN` through `$LONMAX` describe the geographic bounds of the region to be processed (if supplying non-null `$COARSE_MASK`, then these bounds must coincide with boundaries of 10x10 degree tiles). Output files (1 file per 10x10 degree tile if `$COARSE_MASK` is non-null) will be written to `$AGGROOT/$LCTYPE/$LCID/aggregated/`.
 
-!!! Change this   This script contains a coarse-resolution (10x10 degree) mask for several domains including CONUS_MX and USMX. Each domain is associated with a single land cover classification source (MOD12Q1 or the NLCD_INEGI )a specificAssociated with each domain is an ESRI ascii grid file containing a mask domain file containing a mask. This If you wish to process a different domain
-!!! user must add masks for any new domains!!!
-!!! expects an lc_table in a certain location!!!
-!!! edit the location in the script to be placeholder, and tell user to edit it!!!
-!!! args for PHX!!!
+   If `$COARSE_MASK` is not "null", each 10x10 tile will be processed as a separate background process, so the lat/lon bounds should be chosen carefully so as not to create too many simultaneous processes. Also, each process uses a large amount of memory, which is another motivation for checking the memory usage on a single tile before submitting more than one at a time.
 
-   Each 10x10 tile will be processed as a separate background process, so these arguments should be chosen carefully so as not to create too many simultaneous processes. Also, each process uses a large amount of memory, which is another motivation for checking the memory usage on a single tile before submitting more than one at a time.
+   This script makes at least one call to `wrap_download_join_and_agg_MODIS_over_landcover.pl`. If `$COARSE_MASK` is not "null", then for each 10x10 tile, a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` will be called and run in the background, i.e., in parallel with any other tiles. If `$COARSE_MASK` is "null", then a single instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` will be called to process the entire region defined by the lat/lon bounds.
 
-   Each 10x10 tile is handled by a call to a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
-   - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`
-   - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  Note: this script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels!); and it computes Fcanopy from NDVI.  No land cover classes are omitted.  You have to supply a table describing, for each land cover class, how it should handle the QC flags and whether it should generate LAI from the NDVI-LAI relationship.
+   - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`  
+   - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  This script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels); and it computes Fcanopy from NDVI.  
 
 After the aggregation is complete, the large MODIS files can be discarded.
 

@@ -218,7 +218,7 @@ if ($do_stage{1}) {
                     system($cmd);
                   }
                   if (!-e $outfile) {
-                    $cmd = "wget -nv -P $dirs[$i]/$subdir --http-user=$username --http-password=$password http://$url_MODIS/$missions[$i]/$pfxs[$i].$collection/$subdir/$file";
+                    $cmd = "wget -nv -r -P $dirs[$i]/$subdir --http-user=$username --http-password=$password http://$url_MODIS/$missions[$i]/$pfxs[$i].$collection/$subdir/$file";
                     print "$cmd\n";
                     system($cmd);
                   }
