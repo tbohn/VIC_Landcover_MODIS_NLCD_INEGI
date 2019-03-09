@@ -1,12 +1,18 @@
 #!/usr/bin/perl
 require "grid_utils.pl";
 
-$lctype = shift; # "modis" or "asc"
+$lcrootdir = shift;
+$lctype = shift; # "MODIS" or "NLCD_INEGI"
 $lcid = shift; 
+$lcpfx = shift; 
+$lctable = shift; 
 $domain = shift;
+$coarse_tile_mask_file = shift;
+$landmask = shift;
 $startyear = shift;
 $endyear = shift;
-$latminmin_in = shift;
+!!! maybe change this to make them the true bounds of domain at 10deg
+$latminmin_in = shift; # xxx
 $latminmax_in = shift;
 $lonminmin_in = shift;
 $lonminmax_in = shift;
@@ -16,144 +22,53 @@ $outdir = shift;
 $outpfx = shift;
 $force = shift;
 
+if ($lctype eq "MODIS") {
+  $lcformat = "modis";
+  $lcsubdir = "/PFT";
+}
+elsif ($lctype eq "NLCD_INEGI") {
+  $lcformat = "asc";
+  $lcsubdir = "";
+}
+
 @varnames = ("LAI","NDVI","albedo");
 
-if ($domain eq "N_AM") {
-  $latminmin = 0;
-  $lonminmin = -180;
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.N_AM_union_L2015_plus_hawaii.0.0625_deg.asc";
-  @coarse_tile_mask = (
-    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0],
-    [0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
-  );
-  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
-  $lcpfx = "MCD12Q1";
-  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
-}
-elsif ($domain eq "CONUS_MX") {
-  $latminmin = 10;
-  $lonminmin = -130;
-#  $landmask = "/media/tjbohn/Data/data/masks/mask.land.CONUS_MX.0.0625_deg.asc";
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.N_AM.0.0625_deg.asc";
-  @coarse_tile_mask = (
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 1, 1, 1, 0, 0],
-  );
-  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
-  $lcpfx = "MCD12Q1";
-  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
-}
-elsif ($domain eq "HI") {
-  $latminmin = 10;
-  $lonminmin = -170;
-  $landmask = "null";
-  @coarse_tile_mask = (
-    [1, 1],
-    [1, 1],
-  );
-  $lcdir = "/media/tjbohn/Data/data/LandCover/MODIS/PFT/$lcid";
-  $lc_table = "/home/tjbohn/data/CONUS_MX/lc_table.CONUS_MX.IGBP.txt";
-}
-elsif ($domain eq "USMX") {
-  $latminmin = 10;
-  $lonminmin = -130;
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.USMX.0.0625_deg.asc";
-  @coarse_tile_mask = (
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 1, 1, 1, 0, 0],
-  );
-  $lcdir = "/media/tjbohn/Data/data/LandCover/NLCD_INEGI/$lcid/asc.clip.1deg";
-  $lcpfx = "nlcd_inegi";
-  $lc_table = "/home/tjbohn/data/USMX/lc_table.USMX.NLCD_INEGI.txt";
-}
-elsif ($domain eq "PR") {
-  $latminmin = 10;
-  $lonminmin = -70;
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.PR.0.0625_deg.asc";
-  @coarse_tile_mask = (
-    [1],
-  );
-  $lcdir = "/media/tjbohn/Data/data/LandCover/NLCD_INEGI/$lcid/asc.clip.1deg";
-  $lcpfx = "nlcd_inegi";
-  $lc_table = "/home/tjbohn/data/PR/lc_table.PR.NLCD_INEGI.txt";
-}
-elsif ($domain eq "HMO") {
-  $latminmin = 20;
-  $lonminmin = -120;
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.HMO.$resolution_out\_deg.asc";
-  @coarse_tile_mask = (
-    [1],
-  );
-  $boxlatmin = 28.5;
-  $boxlatmax = 29.5;
-  $boxlonmin = -111.5;
-  $boxlonmax = -110.5;
-  $lcdir = "/home/tjbohn/data/HMO/params";
-  $lcpfx = "land_use.HMO.NLCD_INEGI_IMPLAN";
-  $lc_table = "/home/tjbohn/data/HMO/params/lc_table.HMO.NLCD_INEGI_IMPLAN.txt";
-}
-elsif ($domain eq "PHX") {
-  $latminmin = 10;
-  $lonminmin = -120;
-  $landmask = "/media/tjbohn/Data/data/masks/mask.land.PHX.$resolution_out\_deg.asc";
-  @coarse_tile_mask = (
-    [1],
-  );
-  $boxlatmin = 32.5;
-  $boxlatmax = 34;
-  $boxlonmin = -112.9375;
-  $boxlonmax = -111.4375;
-  $lcdir = "/home/tjbohn/data/PHX/params";
-  if ($lcid =~ /2011.PHX.CAP_LTER/) {
-    if ($lcid =~ /2011.PHX.CAP_LTER(.current)?$/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.current";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_drou/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_drou";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_flood/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_flood";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.adap_heat/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.adap_heat";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.strategic/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.strategic";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_emera/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_emera";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_hhh/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_hhh";
-    }
-    elsif ($lcid =~ /2011.PHX.CAP_LTER.trans_zero/) {
-      $lcpfx = "land_use.PHX.NLCD_INEGI_CAP_LTER.trans_zero";
-    }
-    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_CAP_LTER.txt";
+# Read coarse tile mask
+open(FILE,$coarse_tile_mask_file) or die "$0: ERROR: cannot open $coarse_tile_mask_file for reading\n";
+$row = 0;
+foreach (<FILE>) {
+  chomp;
+  @fields = split /\s+/;
+  if ($fields[0] =~ /ncols/) {
+    $ncols = $fields[1];
   }
-  elsif ($lcid =~ /ICLUS.2010/) {
-    $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2010";
-    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+  elsif ($fields[0] =~ /nrows/) {
+    $nrows = $fields[1];
   }
-  elsif ($lcid =~ /ICLUS.2000/) {
-    $lcpfx = "land_use.PHX.NLCD_INEGI_ICLUS_2000";
-    $lc_table = "/home/tjbohn/data/PHX/params/lc_table.PHX.NLCD_INEGI_ICLUS.txt";
+  elsif ($fields[0] =~ /xllcorner/) {
+    $xllcorner = $fields[1];
+  }
+  elsif ($fields[0] =~ /yllcorner/) {
+    $yllcorner = $fields[1];
+  }
+  elsif ($fields[0] =~ /cellsize/) {
+    $cellsize = $fields[1];
+  }
+  elsif ($fields[0] =~ /nodata/) {
+    $nodata = $fields[1];
+  }
+  else {
+    for ($col=0; $col<$ncols; $col++) {
+      $coarse_tile_mask[$nrows-1-$row][$col] = $fields[$col];
+    }
+    $row++;
   }
 }
-$nLats = scalar @coarse_tile_mask;
-$nLons = scalar @{$coarse_tile_mask[0]};
+close(FILE);
+$latminmin = $yllcorner;
+$lonminmin = $xllcorner;
+$nLats = $nrows;
+$nLons = $ncols;
 
 # get lists of MODIS tiles to download and process
 if ($domain eq "N_AM" || $domain eq "CONUS_MX" || $domain eq "USMX" || $domain eq "PR") {
@@ -236,11 +151,11 @@ for ($i=$nLats-1; $i>=0; $i--) {
     $script = "wrap_download_join_and_agg_MODIS_over_landcover.pl";
     $logfile = "log.$script.$domain.$lcid.$lat.$latmax.$lon.$lonmax.txt";
 #    $stagelist = "1";
-#    $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile";
+#    $cmd = "$script $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile";
 #    print "$cmd\n";
 #    (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
     $stagelist = "1,2";
-    $cmd = "$script $lctype $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
+    $cmd = "$script $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
   }

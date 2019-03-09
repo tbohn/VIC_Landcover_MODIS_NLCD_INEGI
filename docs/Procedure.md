@@ -2,7 +2,7 @@
 
 The processing divides the domain into 10x10 degree (geographic projection) tiles.  For any given 10x10 tile, multiple MODIS sinusoidal projection tiles will overlap with the 10x10 tile (MODIS tiles are sort of rhomboidal, but they have north and south boundaries aligned with 10-degree latitude increments, so it's only the E and W boundaries that mismatch with 10x10 tiles).
 
-## Step 1: Download and aggregate MODIS files
+## Stage 1: Download and aggregate MODIS files
 
 1. Create an account with NASA Earthdata. To obtain a NASA Earthdata Login account, visit https://urs.earthdata.nasa.gov/users/new/.
 
@@ -80,21 +80,54 @@ The processing divides the domain into 10x10 degree (geographic projection) tile
 
    You can download the NLCD_INEGI land cover classifications from [Zenodo](https://zenodo.org/record/2580428).
 
-   I created a "NLCD_INEGI" subdirectory under "LandCover" (next to the "MODIS" subdirectory). Extract the NLCD_INEGI tar files to here.
+   I created a "NLCD_INEGI" subdirectory under "LandCover" (next to the "MODIS" subdirectory). Extract the NLCD_INEGI tar files to that subdirectory.
 
 7. Downloading of MODIS land surface properties and aggregation over the land cover classification
 
-   After you have downloaded the index.html files, you can then run scripts to download the hdf files:
+   After you have downloaded the index.html files, you can then run the following script to download the hdf files and aggregate the data over the land cover classification:
 
-   `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
-   - This is an example batch script that contains a command line run of `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel`, with all the necessary arguments, for a specified set of 10x10 tiles
-   - `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel` loops over the specified set of 10x10 tiles that are in the specified domain and calls a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
+!!! Change this
+   `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel $LCFORMAT $LCID $DOMAIN $STARTYEAR $ENDYEAR $LATMIN $LATMAX $LONMIN $LONMAX $PIX_PER_DEG $OUT_RES $AGGROOT/$LCTYPE/$LCID/aggregated $OUTPFX $FORCE`
+
+   where
+
+   `$LCFORMAT` = either "modis" (for MCD12Q1) or "asc" (for NLCD_INEGI)
+   `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)
+   `$STARTYEAR` = first year of MODIS land surface observations to process (I used 2000)
+   `$ENDYEAR` = last year of MODIS land surface observations to process (I used 2016)
+!!! Change this - latmax and lon max are actually latminmax and lonminmax
+!!! or change script to make the doc true
+   `$LATMIN` = minimum latitude to process; must be integer multiple of 10
+   `$LATMAX` = maximum latitude to process; must be integer multiple of 10
+   `$LONMIN` = minimum longitude to process; must be integer multiple of 10
+   `$LONMAX` = maximum longitude to process; must be integer multiple of 10
+   `$PIX_PER_DEG` = number of MODIS pixels per degree (for all products discussed here, it is 240)
+   `$OUT_RES` = output grid resolution in degrees (I used 0.0625)
+   `$AGGROOT` = path to top-level directory of the tree of output directories
+   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)
+   `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"
+   `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)
+
+   This script has 2 stages; 1. download the MODIS data; 2. aggregate over the land cover classificaton. Once stage 1 has completed successfully, running this script again will not re-run stage 1 unless `$FORCE` is set to 1.
+
+   `$LCFORMAT`, `$LCID`, and `$LCTYPE` refer to the land cover classification. `$STARTYEAR` etc through `$PIX_PER_DEG` refer to the MODIS land surface observation time series. `$LATMIN` through `$LONMAX` describe the geographic bounds of the region to be processed, at 10x10 degree resolution, because the processing scripts divide the domain into 10x10 degree tiles. Output files (1 file per 10x10 degree tile) will be written to `$AGGROOT/$LCTYPE/$LCID/aggregated/`.
+
+!!! Change this   This script contains a coarse-resolution (10x10 degree) mask for several domains including CONUS_MX and USMX. Each domain is associated with a single land cover classification source (MOD12Q1 or the NLCD_INEGI )a specificAssociated with each domain is an ESRI ascii grid file containing a mask domain file containing a mask. This If you wish to process a different domain
+!!! user must add masks for any new domains!!!
+!!! expects an lc_table in a certain location!!!
+!!! edit the location in the script to be placeholder, and tell user to edit it!!!
+!!! args for PHX!!!
+
+   Each 10x10 tile will be processed as a separate background process, so these arguments should be chosen carefully so as not to create too many simultaneous processes. Also, each process uses a large amount of memory, which is another motivation for checking the memory usage on a single tile before submitting more than one at a time.
+
+   Each 10x10 tile is handled by a call to a separate instance of `wrap_download_join_and_agg_MODIS_over_landcover.pl` in the background, i.e., in parallel, for each 10x10 tile
    - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`
    - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  Note: this script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels!); and it computes Fcanopy from NDVI.  No land cover classes are omitted.  You have to supply a table describing, for each land cover class, how it should handle the QC flags and whether it should generate LAI from the NDVI-LAI relationship.
 
 After the aggregation is complete, the large MODIS files can be discarded.
 
-## Step 2: Gap-filling and other post-processing
+   `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.30_40.csh`
+## Stage 2: Gap-filling and other post-processing
 
  - batch.wrap_process_veg_hist.pl.PR.2001.csh
    - Calls wrap_process_veg_hist.pl for a given set of 10x10 tiles and a given domain.
