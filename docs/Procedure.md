@@ -133,22 +133,64 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    - `wrap_download_join_and_agg_MODIS_over_landcover.pl` calls wget to download the relevant MODIS tiles (with the option to ingore tiles that have already been downloaded) and calls `join_and_agg_MODIS_over_landcover.py`  
    - `join_and_agg_MODIS_over_landcover.py` aggregates the MODIS data over the specified land cover classification.  The two options allowed are: MODIS, which has the same gridding as the MODIS LAI and therefore has an easy 1:1 mapping with them; and NLCD, which is at 30 m resolution (reprojected to geographic and broken up into 1x1 degree tiles).  This script is what checks the LAI QC codes for clouds, snow, bad retrievals, etc; it also creates urban LAI values from a prescribed NDVI-LAI relationship (since the MODIS LAI product has nulls over urban pixels); and it computes Fcanopy from NDVI.  
 
-   Examples of running `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found under the "examples" directory:
+   Examples of running `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
 
    - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh  
    - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.2011.30_40.csh  
+
+   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
 
    After the aggregation is complete, the large MODIS input files can be discarded.
 
 ## Stage 2: Gap-filling and other post-processing
 
- - batch.wrap_process_veg_hist.pl.PR.2001.csh
-   - Calls wrap_process_veg_hist.pl for a given set of 10x10 tiles and a given domain.
+   Before this stage can begin, we need a NetCDF VIC-5 compliant domain file. For the CONUS_MX and USMX domains, domain files are available for download on [Zenodo](https://zenodo.org/record/2564019). If you have a different domain, you can either clip out your domain from within these domain files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).
 
- - wrap_process_veg_hist.pl
-   - loops over the 10x10 tiles and calls an instance of process_veg_hist.single_file.pl for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel.
+   If you wish to divide the domain into 10x10 degree boxes (for parallel processing), you will also need to divide the domain file into similar boxes.  See the "Utility Scripts" section below). If you do this, you need to name the directory containing the 10x10 tiles of the domain file as xxxx and the individual 10x10 files should have a prefix of xxx (the lat/lon range covered by the tile will be appended to the prefix).
 
- - process_veg_hist.single_file.pl
+   For domains that have been divided into 10x10 tiles, the script that manages all processing is `wrap_process_veg_hist.pl`. This script loops over the 10x10 tiles and calls an instance of `process_veg_hist.single_file.pl` for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel. Usage:
+
+   `wrap_process_veg_hist.pl $AGGROOT $AGGROOT2 $LCID $PREFIX $STAGELIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LC_SCHEME`
+
+   where
+
+   `$AGGROOT` = path to top-level directory of the tree of output directories  
+   `$AGGROOT2` = can be equal to `$AGGROOT`; if you are storing all subsequent processing outputs in a different location, this gives you the option to do it  
+   `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
+   `$PREFIX` = should be same `$OUTPFX` from Stage 1, but if you are dividing into 10x10 tiles, and you want to specify a subset of files to process, you should add any information that would distinguish these files (e.g., for 30-40 latitude, specify veg_hist.30)  
+   `$STAGELIST` = comma-separated list of processing stages to run, e.g., "1,2,3,4,5,6,7,8,9". Stages:  
+   - 0:  
+   - 1:  
+   - 2:  
+
+   `$LCID_CV` = xxx  
+   `$LCID_OUT` = xxx  
+   `$TIME_OFFSET` = xxx  
+   `$NPARALLEL` = xxx  
+   `$CLEAN` = xxx  
+   `$DATA_ROOT` = xxx  
+   `$DOMAIN_PFX` = xxx  
+   `$PARAM_PFX` = xxx  
+   `$LC_SCHEME` = xxx  
+$rootdir = shift;
+$archivedir = shift;
+$lcid = shift;
+$prefix = shift;
+$stagelist = shift;
+$lcid_cv = shift;
+$lcid_out = shift;
+$time_offset = shift; # seconds
+$nParallel = shift; # number of tiles to process in parallel
+$clean = shift; # 1 = delete files from previous steps as we go
+$data_root = shift;
+$domain_pfx = shift;
+$param_pfx = shift;
+$lcscheme = shift;
+
+   If you have a small domain and want to process it as a single stream (each stage of processing deals with a single file containing the entire domain), run:
+
+   `process_veg_hist.single_file.pl xxx`
+
    - Performs the user-specified sequence of processing steps on a given 10x10 tile.  Stages are:
      0. cleanup_albedo.py - this removes statistical outliers from the timeseries of albedo from each veg tile of each grid cell.  This because I noticed that in the time steps leading up to and immediately following the snow season, suspiciously high albedo values appeared that seemed clearly due to presence of snow that wasn't sufficient to trigger the QC flags but was clearly out of character.
      1. compute_clim_veg_hist.py - computes climatological mean and std of LAI, NDVI, Fcanopy, and albedo for each 8-day interval of the year.  Also records the count of valid observations of each for each veg tile of each grid cell.
@@ -161,8 +203,18 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
      8. compute_clim_from_monthly.py - computes a climatology from the monthly files saved from stage 7, but spanning an arbitrary set of years.  I've used this for controlling more precisely which year's LAI etc are used with a given land cover map (e.g., year 2001 for the 2001 NLCD map; year 2011 for the 2011 map, etc).
      9. replace_vegparams_with_veghist_clim.py - this time, used to create veg prams using the climatology from stage 8 instead of from stage 6.
 
-Some miscellaneous scripts that are handy utilities (for me, anyway):
+   Examples of running `xxx` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+
+   - batch.xxx.CONUS_MX.MODIS.mode_PFT.30_40.csh  
+   - batch.xxx.USMX.NLCD_INEGI.2011.30_40.csh  
+
+   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+
+## Utility Scripts
+
+!!! Fill this out more
+Some useful utility scripts:
  - create_domain_file_from_asc_inputs.py - I use this to create domain files
  - create_metsim_state_file_from_domain_file.py - I use this to create metsim initial state files
  - gridclip.py - clips a netcdf file to the specified lat/lon boundaries
-
+ - the subsample scripts - both for subsampling and for clipping to a domain file (with or without subsampling)
