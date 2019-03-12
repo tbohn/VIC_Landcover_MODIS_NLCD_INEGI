@@ -317,9 +317,9 @@ Some useful utility scripts:
 
    `$INFILE` = input file  
    `$DOMAINFILE` = domain file to clip to (at either the same or finer resolution)  
-   `-n` = optional; if specified, use default fill ("nodata") values
-   `-s` = optional; if specified, `$INFILE` contains snow bands
-   `-f` = optional; if specified, `$INFILE` contains Fcanopy
+   `-n` = optional; if specified, use default fill ("nodata") values  
+   `-s` = optional; if specified, `$INFILE` contains snow bands  
+   `-f` = optional; if specified, `$INFILE` contains Fcanopy  
    `$OUTFILE` = output file  
 
  - To subsample VIC gridded daily forcings to a finer resolution AND/OR clip to a new irregularly-shaped domain (via the mask of a domain file):
