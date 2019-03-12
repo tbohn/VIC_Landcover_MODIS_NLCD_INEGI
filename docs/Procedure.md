@@ -214,7 +214,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    where
 
-   `$SUBDIR` = subdirectory containing the files you want to mosaic together. For the output of stage 7 (vic parameters with monthly annual cycle derived from climatological mean between start and end years), `$SUBDIR` = "vic_params.allyears". For the output of stage 9 (vic parameters with monthly annual cycle derived from a single year `$YEAR`), `$SUBDIR` = `vic_params.$YEAR_$YEAR`.  
+   `$SUBDIR` = subdirectory containing the files you want to mosaic together. For the output of stage 6 (17-year monthly timeseries of LAI etc.), `$SUBDIR` = "monthly". For the output of stage 7 (vic parameters with monthly annual cycle derived from climatological mean between start and end years), `$SUBDIR` = "vic_params.allyears". For the output of stage 9 (vic parameters with monthly annual cycle derived from a single year `$YEAR`), `$SUBDIR` = `vic_params.$YEAR_$YEAR`.  
    `$STARTYEAR` and `$ENDYEAR` = first and last years of period used for computing monthly annual cycle; for parameter sets using climatological mean over the period 2000-2016, these are 2000 and 2016; for parameter sets using the monthly values from a single year, `$STARTYEAR` and `$ENDYEAR` are both set to that year.  
 
 #### Examples
@@ -236,8 +236,8 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    where
 
-   `$AGGFILE` = the path/name of the output file of Stage 1 (i.e., aggregated MODIS observations over land cover fractions).
-   all other `$*` variables = same definitions as under Option 1 (the 10x10 tile option).
+   `$AGGFILE` = the path/name of the output file of Stage 1 (i.e., aggregated MODIS observations over land cover fractions).  
+   all other `$*` variables = same definitions as under Option 1 (the 10x10 tile option).  
 
 #### Examples
 
@@ -260,6 +260,14 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    xxx
 
+   2. Disaggregate the monthly timeseries to daily:
+
+   `xxx`
+
+   where
+
+   xxx
+
 ## Utility Scripts
 
 !!! Fill this out more
@@ -268,3 +276,4 @@ Some useful utility scripts:
  - create_metsim_state_file_from_domain_file.py - I use this to create metsim initial state files
  - gridclip.py - clips a netcdf file to the specified lat/lon boundaries
  - the subsample scripts - both for subsampling and for clipping to a domain file (with or without subsampling)
+ - set_run_cell.py
