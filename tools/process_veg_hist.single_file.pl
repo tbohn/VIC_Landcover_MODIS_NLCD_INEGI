@@ -249,7 +249,7 @@ if ($do_stage{6}) {
 # Combine these veg params with existing soil params 
 if ($do_stage{7}) {
 
-  $domain_dir = "$data_root/domain";
+  $domain_dir = "$data_root/$domain_pfx";
   $param_dir = "$data_root/$param_pfx";
   $subdir_clim = "monthly_clim";
   $climdir = "$archivedir/$lcid_out/$subdir_clim";
@@ -263,8 +263,8 @@ if ($do_stage{7}) {
   }
   $domainfile = "$domain_dir/$domain_pfx.$locstr.nc";
   $paramfile = "$param_dir/$param_pfx.$locstr.nc";
-  $libfile = "$data_root/veg_lib_$lcscheme";
-  $rootfile = "$data_root/root_zones_$lcscheme";
+  $libfile = "$data_root/veg_lib.$domain.$lcscheme.txt";
+  $rootfile = "$data_root/root_zones.$domain.$lcscheme.txt";
   $climfile = "$climdir/$file";
   $climfile =~ s/\.$lcid\./.$lcid_out./;
   $climfile =~ s/nc$/monthly_clim.nc/;

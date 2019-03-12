@@ -144,13 +144,36 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
 ## Stage 2: Gap-filling and other post-processing
 
-   Before this stage can begin, we need a NetCDF VIC-5 compliant domain file. For the CONUS_MX and USMX domains, domain files are available for download on [Zenodo](https://zenodo.org/record/2564019). If you have a different domain, you can either clip out your domain from within these domain files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).
+   Before this stage can begin, we need 2 other files:
+   - NetCDF VIC-5 compliant domain file for the current domain
+   - NetCDF VIC-5 compliant "source" parameter file (which will supply all parameters except land cover fractions, LAI, Fcanopy, and albedo) for the current domain
 
-   If you wish to divide the domain into 10x10 degree boxes (for parallel processing), you will also need to divide the domain file into similar boxes.  See the "Utility Scripts" section below). If you do this, you need to name the directory containing the 10x10 tiles of the domain file as xxxx and the individual 10x10 files should have a prefix of xxx (the lat/lon range covered by the tile will be appended to the prefix).
+   For the CONUS_MX and USMX domains, domain files are available for download on [Zenodo](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on [Zenodo](https://zenodo.org/record/2559631).
+
+   If you have a different domain, you can either clip out your domain from within these domain and parameter files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).  To create a NetCDF VIC-5 compliant "source" parameter file for a domain outside L2015, you will need ascii-format VIC soil, snow, and vegetation parameters (and vegetation library file) for the domain, and you can use the tool [tonic](https://github.com/UW-Hydro/tonic).
+
+### Option 1: if you have divided your domain into 10x10 degree boxes
+
+#### 1.a. Clipping
+
+   If you wish to divide the domain into 10x10 degree boxes (for parallel processing), you will also need to divide (a) the domain file and (b) the "source" VIC parameter file into similar boxes. For this, use the following script:
+
+   `grid_multi_clip.py -i $INFILE -m $COARSE_MASK -p $PREFIX -o $OUTDIR`
+
+   where
+
+   `$INFILE` = NetCDF VIC-5 compliant input file to be clipped into boxes (either a domain file or a VIC parameter file), e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.nc`.  
+   `$COARSE_MASK` = same 10x10 degree mask of domain as used in Stage 1.  
+   `$PREFIX` = output file prefix, e.g., `domain.$DOMAIN.10x10`.  
+   `$OUTDIR` = output directory, e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.10x10`.  
+
+   For each output file, the lat/lon range covered by the tile will be appended to the prefix, followed by `.nc`.
+
+#### 1.b. Processing
 
    For domains that have been divided into 10x10 tiles, the script that manages all processing is `wrap_process_veg_hist.pl`. This script loops over the 10x10 tiles and calls an instance of `process_veg_hist.single_file.pl` for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel. Usage:
 
-   `wrap_process_veg_hist.pl $AGGROOT $AGGROOT2 $LCID $PREFIX $STAGELIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LC_SCHEME`
+   `wrap_process_veg_hist.pl $AGGROOT $AGGROOT2 $LCID $PREFIX $STEPLIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LCTYPE`
 
    where
 
@@ -158,57 +181,84 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$AGGROOT2` = can be equal to `$AGGROOT`; if you are storing all subsequent processing outputs in a different location, this gives you the option to do it  
    `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
    `$PREFIX` = should be same `$OUTPFX` from Stage 1, but if you are dividing into 10x10 tiles, and you want to specify a subset of files to process, you should add any information that would distinguish these files (e.g., for 30-40 latitude, specify veg_hist.30)  
-   `$STAGELIST` = comma-separated list of processing stages to run, e.g., "1,2,3,4,5,6,7,8,9". Stages:  
-   - 0:  
-   - 1:  
-   - 2:  
+   `$STEPLIST` = comma-separated list of processing steps to run, e.g., "0,1,2,3,4,5,6,7,8,9". Processing steps:  
+   - 0: Remove remaining albedo observations that appear impacted by snow (calls `cleanup_albedo.py`).  
+   - 101: (optional) Replace land cover area fractions with those of another land cover classification. Requires specifying `$LCID_CV` which should be the `$LCID` of some other parameter set that has completed step 0 (calls `replace_cv.py`).  
+   - 1: Compute the climatological (temporal) mean and standard deviation of LAI, Fcanopy, and albedo of each of the 46 8-day observations in the annual cycle, for each land cover class in each grid cell (calls `compute_clim_veg_hist.py`).  
+   - 2: Fill gaps in the climatological mean and standard deviation (calls `gapfill_veg_hist.py`).  
+   - 3: Compute standardized 8-day anomalies with respect to the climatological (temporal) mean and standard deviation of LAI, Fcanopy, and albedo, for each land cover class in each grid cell (calls `compute_anom_veg_hist.py`).  
+   - 4: Fill gaps in the anomalies (calls `gapfill_veg_hist.py`).  
+   - 5: Recombine the gap-filled climatological mean and standard deviation with the gap-filled anomalies (calls `recombine_clim_anom_veg_hist.py`).  
+   - 6: Interpolate the recombined gap-filled 8-day timeseries to daily; then aggregates to monthly and computes the climatological mean annual cycle of monthly values (calls `interp_and_agg2monthly_veg_hist.py`).  
+   - 7: Takes an existing VIC parameter set and replaces the land cover fractions, LAI, Fcanopy, and albedo with the land cover fractions and climatological mean monthly values of `$LCID` (calls `replace_vegparams_with_veghist_clim.py`).  
+   - 8: Selects a specific year of the monthly timeseries and uses that as the monthly annual cycle (calls `compute_clim_from_monthly.py`).  
+   - 9: Takes an existing VIC parameter set and replaces the land cover fractions, LAI, Fcanopy, and albedo with the land cover fractions and selected monthly values of step 8 (calls `replace_vegparams_with_veghist_clim.py`).  
 
-   `$LCID_CV` = xxx  
-   `$LCID_OUT` = xxx  
-   `$TIME_OFFSET` = xxx  
-   `$NPARALLEL` = xxx  
-   `$CLEAN` = xxx  
-   `$DATA_ROOT` = xxx  
-   `$DOMAIN_PFX` = xxx  
-   `$PARAM_PFX` = xxx  
-   `$LC_SCHEME` = xxx  
-$rootdir = shift;
-$archivedir = shift;
-$lcid = shift;
-$prefix = shift;
-$stagelist = shift;
-$lcid_cv = shift;
-$lcid_out = shift;
-$time_offset = shift; # seconds
-$nParallel = shift; # number of tiles to process in parallel
-$clean = shift; # 1 = delete files from previous steps as we go
-$data_root = shift;
-$domain_pfx = shift;
-$param_pfx = shift;
-$lcscheme = shift;
+   `$LCID_CV` = if step 101 selected, should be `$LCID` of the parameter set whose area fractions you want to use; otherwise should = "null".  
+   `$LCID_OUT` = if step 101 selected, should be the `$LCID` that you want to call the output; otherwise should = `$LCID`.  
+   `$TIME_OFFSET` = number of seconds to wait between submitting processing jobs in parallel.  
+   `$NPARALLEL` = maximum number of processing jobs to run at the same time.  
+   `$CLEAN` = either 1 (= delete files from previous step as we start new step) or 0 (= don't delete any files).  
+   `$DATA_ROOT` = top-level directory under which the domain and parameter files for use with VIC are stored (expects `$DATA_ROOT/$DOMAIN_PFX/$DOMAIN_PFX.$LOCSTR.nc`, where `$LOCSTR` = `$LAT0_$LAT1n.$LON0_$LON1e`, where `$LAT0`...`$LON1` are the south, north, west, and east boundaries of the 10x10 tile).  
+   `$DOMAIN_PFX` = both the name of the directory containing 10x10 domain files, and also the file prefix of those 10x10 files.  
+   `$PARAM_PFX` = this refers to the "source" vic parameter dataset of which the land cover fractions and LAI, Fcanopy, and albedo annual cycles will be replaced with the ones being processed; `$PARAM_PFX` is both the name of the directory containing 10x10 files, and also the file prefix of those 10x10 files.  
+   `$LCTYPE` = same `$LCTYPE` used in Stage 1 (downloading and aggregating).  
+
+   This script calls `process_veg_hist.single_file.pl` for each 10x10 tile.
+
+#### 1.c. Mosaicking
+
+   After running `wrap_process_veg_hist.pl` on all 10x10 tiles, the end result can be mosaicked back together into a single file covering the entire domain via:
+
+   `grid_mosaic.py -d $DOMAIN_FILE -i $AGGROOT2/$LCTYPE/$LCID/$SUBDIR -p $PREFIX -o $DATA_ROOT/$DOMAIN/veg_hist.$DOMAIN.$LCTYPE.$LCID.$STARTYEAR_$ENDYEAR.monthly.nc`
+
+   where
+
+   `$SUBDIR` = subdirectory containing the files you want to mosaic together. For the output of stage 7 (vic parameters with monthly annual cycle derived from climatological mean between start and end years), `$SUBDIR` = "vic_params.allyears". For the output of stage 9 (vic parameters with monthly annual cycle derived from a single year `$YEAR`), `$SUBDIR` = `vic_params.$YEAR_$YEAR`.  
+   `$STARTYEAR` and `$ENDYEAR` = first and last years of period used for computing monthly annual cycle; for parameter sets using climatological mean over the period 2000-2016, these are 2000 and 2016; for parameter sets using the monthly values from a single year, `$STARTYEAR` and `$ENDYEAR` are both set to that year.  
+
+#### Examples
+
+   Examples of running `wrap_process_veg_hist.pl` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+
+   - batch.wrap_process_veg_hist.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh  
+   - batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.2011.30_40.csh  
+
+   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+
+### Option 2: if you are processing your domain as a single stream and file
+
+#### Processing
 
    If you have a small domain and want to process it as a single stream (each stage of processing deals with a single file containing the entire domain), run:
 
-   `process_veg_hist.single_file.pl xxx`
+   `process_veg_hist.single_file.pl $AGGROOT $AGGROOT2 $LCID $AGGFILE $STAGELIST $LCID_CV $LCID_OUT $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LCTYPE`
 
-   - Performs the user-specified sequence of processing steps on a given 10x10 tile.  Stages are:
-     0. cleanup_albedo.py - this removes statistical outliers from the timeseries of albedo from each veg tile of each grid cell.  This because I noticed that in the time steps leading up to and immediately following the snow season, suspiciously high albedo values appeared that seemed clearly due to presence of snow that wasn't sufficient to trigger the QC flags but was clearly out of character.
-     1. compute_clim_veg_hist.py - computes climatological mean and std of LAI, NDVI, Fcanopy, and albedo for each 8-day interval of the year.  Also records the count of valid observations of each for each veg tile of each grid cell.
-     2. gapfill_veg_hist.py - does gap-filling in 2 stages: 1. temporally, based on a simple linear interpolation, and 2. spatially, based on a gaussian smoothing kernel.  By far, most gaps are filled by stage 1 (which is computationally less expensive).  The reason temporal takes priority is that, if you look at the data, you'll see that spatial heterogeneity is quite high compared to temporal (and compared to typical gap size in these dimensions).  So, filling spatially first results in weird smooth patches, and is more expensive (as I mentioned before).
-     3. compute_anom_veg_hist.py - computes anomalies of the 8-day data relative to the climatologies computed in stages 1 and 2.  Anomalies are normal deviates (I think that's the correct term): x' = (x - x_mean)/x_std.
-     4. gapfill_veg_hist.py - same script as stage 2, but now gap-fill the anomalies.  Why I've separated these two things is because climatology is much better observed/robust (with fewer gaps) than anomalies.  Interpolating the raw data would result in weird deviations from climatological behavior.  Interpolating them separately allows the climatology to be retained.
-     5. recombine_clim_anom_veg_hist.py - recombines the gap-filled climatology and anomalies.
-     6. interp_and_agg2monthly_veg_hist.py - interpolates the 8-day records to daily (for my use later to study veg variability); aggregates to monthly (but still a multi-year timeseries; saves these for later too); and computes climatological mean monthly cycle (saves these for using in the VIC parameter file).
-     7. replace_vegparams_with_veghist_clim.py - takes an existing netcdf-format VIC parameter file over the target domain, and replaces the veg parameters with new ones.  User must supply the original VIC parameter file; a new veg library file; a file listing the root zone info for each class; and the monthly climatological LAI, Fcanopy, and albedo produced in stage 6.
-     8. compute_clim_from_monthly.py - computes a climatology from the monthly files saved from stage 7, but spanning an arbitrary set of years.  I've used this for controlling more precisely which year's LAI etc are used with a given land cover map (e.g., year 2001 for the 2001 NLCD map; year 2011 for the 2011 map, etc).
-     9. replace_vegparams_with_veghist_clim.py - this time, used to create veg prams using the climatology from stage 8 instead of from stage 6.
+   where
 
-   Examples of running `xxx` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+   `$AGGFILE` = the path/name of the output file of Stage 1 (i.e., aggregated MODIS observations over land cover fractions).
+   all other `$*` variables = same definitions as under Option 1 (the 10x10 tile option).
 
-   - batch.xxx.CONUS_MX.MODIS.mode_PFT.30_40.csh  
-   - batch.xxx.USMX.NLCD_INEGI.2011.30_40.csh  
+#### Examples
+
+   Examples of running `process_veg_hist.single_file.pl` for a single 10x10 tile for latitudes 30-40 deg N and longitudes -130--120 deg E from the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+
+   - batch.process_veg_hist.single_file.pl.CONUS_MX.MODIS.mode_PFT.30_40n.-130_-120e.csh  
+   - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.2011.30_40n.-130_-120e.csh  
 
    To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+
+## Stage 3: (Optional) Prepare monthly timeseries of MODIS Observations
+
+   This stage is only necessary if you wish to drive VIC with an explicit 17-year timeseries of LAI, Fcanopy, and albedo.
+
+   1. Break up the time series of monthly-varying files (an output of processing step 6) into 1-year files:
+
+   `xxx`
+
+   where
+
+   xxx
 
 ## Utility Scripts
 
