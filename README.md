@@ -25,7 +25,7 @@ In addition, there are various utility scripts (e.g., clipping to smaller region
 ## Inputs:
 ### Land Cover Classifications:
  - MOD12Q1.005 MODIS-based classification of Friedl et al (2010) at 500-m resolution, for years 2001-2013.  This can be downloaded from the [MODIS site](https://lpdaac.usgs.gov/dataset_discovery/modis).
- - NLCD_INEGI land cover classifications (Bohn and Vivoni 2019b) for years 1992, 2001, and 2011. These are a combination of the National Land Cover Database (NLCD; Homer et al., 2015) over the United States and a modification of the INEGI Uso del Suelo y Vegetacion (INEGI, 2014) classification over Mexico that was harmonized with the NLCD legend. These are available for download at [Zenodo](https://zenodo.org/record/2580428).
+ - NLCD_INEGI land cover classifications (Bohn and Vivoni 2019b) for years 1992, 2001, and 2011. These are a combination of the National Land Cover Database (NLCD; Homer et al., 2015) over the United States and a modification of the INEGI Uso del Suelo y Vegetacion (INEGI, 2014) classification over Mexico that was harmonized with the NLCD legend. These are available for download at [Zenodo](https://zenodo.org/record/2591501).
 
 ### Land Surface Properties:
 MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_discovery/modis)
@@ -34,8 +34,8 @@ MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_disc
  - MOD13A1.006 Normalized Different Vegetation Index (NDVI) (Huete et al., 2002)
 
 ### Miscellaneous Files:
- - NetCDF format VIC-5 image driver domain files compatible with the MOD-LSP domains available from [Zenodo](https://zenodo.org/record/2559631)
- - NetCDF format VIC-5 image driver parameter file from the L2015 simulations (soil parameters were taken directly from this file) available from [Zenodo](https://zenodo.org/record/2564019)
+ - NetCDF format VIC-5 image driver domain files compatible with the MOD-LSP domains available on Zenodo as part of the [PITRI Precipitation Disaggregation Parameters](https://zenodo.org/record/2564019)
+ - NetCDF format VIC-5 image driver parameter file from the L2015 simulations (soil parameters were taken directly from this file) available on Zenodo as part of the [MOD-LSP VIC parameters](https://zenodo.org/record/2559631)
  - Land masks, tables listing land cover classes and class-specific properties (under the data/ directory)
 
 ## Outputs:
@@ -63,9 +63,9 @@ tools/ - scripts for aggregating MODIS data over land cover maps and generation 
 
 ## References
  - Bennett, A., J. J. Hamman, B. Nijssen, E. A. Clark, and K. M. Andreadis, 2018: UW-Hydro/MetSim: Version 1.1.0 (version 1.1.0). Zenodo, doi:10.5281/zenodo.1256120. http://doi.org/10.5281/zenodo.1256120 (Accessed June 7, 2018).
- - Bohn, T. J., and E. R. Vivoni, 2016: Process‐based characterization of evapotranspiration sources over the North American monsoon region. Water Resour. Res., 52, 358–384.
+ - Bohn, T. J., and E. R. Vivoni, 2016: Process-based characterization of evapotranspiration sources over the North American monsoon region. Water Resour. Res., 52, 358–384.
  - Bohn, T. J, and E. R. Vivoni, 2019a: MOD-LSP: MODIS-Based Parameters for Variable Infiltration Capacity (VIC) Model over the Continental US, Mexico, and Southern Canada (Version 1.0) [Data set]. Zenodo, doi:10.528/zenodo.2559631. https://zenodo.org/record/2559631.
- - Bohn, T. J, and E. R. Vivoni, 2019b: NLCD_INEGI: Harmonized US-Mexico Land Cover Change Dataset, 1992/2001/2011 (Version 1.0) [Data set]. Zenodo, doi:10.528/zenodo.2580428.
+ - Bohn, T. J, and E. R. Vivoni, 2019b: NLCD_INEGI: Harmonized US-Mexico Land Cover Change Dataset, 1992/2001/2011 (Version 1.1) [Data set]. Zenodo, doi:10.528/zenodo.2591501.
  - Friedl, M. A., D. Sulla-Menashe, B. Tan, A. Schneider, N. Ramankutty, A. Sibley, and X. Huang, 2010: MODIS Collection 5 global land cover: Algorithm refinements and characterization of new datasets. Remote Sens. Environ., 114, 168–182.
  - Hamman, J. J., B. Nijssen, T. J. Bohn, D. R. Gergel, and Y. Mao, 2018: The Variable Infiltration Capacity Model, Version 5 (VIC-5): Infrastructure improvements for new applications and reproducibility. Geosci. Model Dev., 11, 3481–3496.
  - Homer, C. G., and Coauthors, 2015: Completion of the 2011 National Land Cover Database for the conterminous United States - Representing a decade of land cover change information. Photogramm. Eng. Remote Sens., 81, 345–354.
