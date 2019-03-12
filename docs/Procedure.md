@@ -102,7 +102,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    where
 
    `$LCROOT` = path to top-level directory below which the land cover classifications are stored  
-   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
+   `$LCTYPE` = either "MOD_IGBP" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
    `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
    `$LCPFX` = prefix of land cover classification files, either "MCD12Q1" or "nlcd_inegi"  
    `$LC_TABLE` = table listing land cover classes and their processing options; these can be found in the `data/$DOMAIN` directories  
@@ -118,7 +118,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$PIX_PER_DEG` = number of MODIS pixels per degree (for all products discussed here, it is 240)  
    `$OUT_RES` = output grid resolution in degrees (I used 0.0625)  
    `$AGGROOT` = path to top-level directory of the tree of output directories  
-   `$LCTYPE` = either "MODIS" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
+   `$LCTYPE` = either "MOD_IGBP" (for MCD12Q1) or "NLCD_INEGI" (for NLCD_INEGI)  
    `$OUTPFX` = prefix for output NetCDF files; I used "veg_hist"  
    `$FORCE` = either 0 (don't overwrite existing output files) or 1 (overwrite)  
 
@@ -162,10 +162,10 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    where
 
-   `$INFILE` = NetCDF VIC-5 compliant input file to be clipped into boxes (either a domain file or a VIC parameter file), e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.nc`.  
+   `$INFILE` = NetCDF VIC-5 compliant input file to be clipped into boxes (either a domain file or a VIC parameter file), e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.nc`, where `$DATA_ROOT` = path to top-level directory for storing tables, masks, domain files, and vic parameters; and `$DOMAIN` is either "CONUS_MX" or "USMX".  
    `$COARSE_MASK` = same 10x10 degree mask of domain as used in Stage 1.  
    `$PREFIX` = output file prefix, e.g., `domain.$DOMAIN.10x10`.  
-   `$OUTDIR` = output directory, e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.10x10`.  
+   `$OUTDIR` = output directory, e.g., `$DATA_ROOT/domain.$DOMAIN.10x10`.  
 
    For each output file, the lat/lon range covered by the tile will be appended to the prefix, followed by `.nc`.
 
@@ -173,11 +173,12 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    For domains that have been divided into 10x10 tiles, the script that manages all processing is `wrap_process_veg_hist.pl`. This script loops over the 10x10 tiles and calls an instance of `process_veg_hist.single_file.pl` for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel. Usage:
 
-   `wrap_process_veg_hist.pl $AGGROOT $AGGROOT2 $LCID $PREFIX $STEPLIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LCTYPE`
+   `wrap_process_veg_hist.pl $AGGROOT/$LCTYPE $AGGROOT2/$LCTYPE $LCID $PREFIX $STEPLIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT/$DOMAIN $DOMAINFILE_PFX $PARAM_PFX $LCTYPE`
 
    where
 
    `$AGGROOT` = path to top-level directory of the tree of output directories  
+   `$LCTYPE` = same `$LCTYPE` used in Stage 1 (downloading and aggregating).  
    `$AGGROOT2` = can be equal to `$AGGROOT`; if you are storing all subsequent processing outputs in a different location, this gives you the option to do it  
    `$LCID` = either "mode_PFT" (for MCD12Q1) or the year (2001, 2011, s1992, s2001, s2011) (for NLCD_INEGI)  
    `$PREFIX` = should be same `$OUTPFX` from Stage 1, but if you are dividing into 10x10 tiles, and you want to specify a subset of files to process, you should add any information that would distinguish these files (e.g., for 30-40 latitude, specify veg_hist.30)  
@@ -199,10 +200,9 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$TIME_OFFSET` = number of seconds to wait between submitting processing jobs in parallel.  
    `$NPARALLEL` = maximum number of processing jobs to run at the same time.  
    `$CLEAN` = either 1 (= delete files from previous step as we start new step) or 0 (= don't delete any files).  
-   `$DATA_ROOT` = top-level directory under which the domain and parameter files for use with VIC are stored (expects `$DATA_ROOT/$DOMAIN_PFX/$DOMAIN_PFX.$LOCSTR.nc`, where `$LOCSTR` = `$LAT0_$LAT1n.$LON0_$LON1e`, where `$LAT0`...`$LON1` are the south, north, west, and east boundaries of the 10x10 tile).  
-   `$DOMAIN_PFX` = both the name of the directory containing 10x10 domain files, and also the file prefix of those 10x10 files.  
+   `$DATA_ROOT` = top-level directory under which the domain and parameter files for use with VIC are stored (expects `$DATA_ROOT/$DOMAIN/$DOMAINFILE_PFX/$DOMAINFILE_PFX.$LOCSTR.nc`, where `$LOCSTR` = `$LAT0_$LAT1n.$LON0_$LON1e`, where `$LAT0`...`$LON1` are the south, north, west, and east boundaries of the 10x10 tile).  
+   `$DOMAINFILE_PFX` = both the name of the directory containing 10x10 domain files, and also the file prefix of those 10x10 files.  
    `$PARAM_PFX` = this refers to the "source" vic parameter dataset of which the land cover fractions and LAI, Fcanopy, and albedo annual cycles will be replaced with the ones being processed; `$PARAM_PFX` is both the name of the directory containing 10x10 files, and also the file prefix of those 10x10 files.  
-   `$LCTYPE` = same `$LCTYPE` used in Stage 1 (downloading and aggregating).  
 
    This script calls `process_veg_hist.single_file.pl` for each 10x10 tile.
 
@@ -210,12 +210,13 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    After running `wrap_process_veg_hist.pl` on all 10x10 tiles, the end result can be mosaicked back together into a single file covering the entire domain via:
 
-   `grid_mosaic.py -d $DOMAIN_FILE -i $AGGROOT2/$LCTYPE/$LCID/$SUBDIR -p $PREFIX -o $DATA_ROOT/$DOMAIN/veg_hist.$DOMAIN.$LCTYPE.$LCID.$STARTYEAR_$ENDYEAR.monthly.nc`
+   `grid_mosaic.py -d $DOMAIN_FILE -i $AGGROOT2/$LCTYPE/$LCID/$SUBDIR -p $PREFIX -o $OUTFILE`
 
    where
 
    `$SUBDIR` = subdirectory containing the files you want to mosaic together. For the output of stage 6 (17-year monthly timeseries of LAI etc.), `$SUBDIR` = "monthly". For the output of stage 7 (vic parameters with monthly annual cycle derived from climatological mean between start and end years), `$SUBDIR` = "vic_params.allyears". For the output of stage 9 (vic parameters with monthly annual cycle derived from a single year `$YEAR`), `$SUBDIR` = `vic_params.$YEAR_$YEAR`.  
    `$STARTYEAR` and `$ENDYEAR` = first and last years of period used for computing monthly annual cycle; for parameter sets using climatological mean over the period 2000-2016, these are 2000 and 2016; for parameter sets using the monthly values from a single year, `$STARTYEAR` and `$ENDYEAR` are both set to that year.  
+   `$OUTFILE` = output path/filename; filename should be basically `$PREFIX.nc`.  
 
 #### Examples
 
@@ -254,26 +255,32 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    1. Break up the time series of monthly-varying files (an output of processing step 6) into 1-year files:
 
-   `xxx`
+      `breakup_veg_hist_into_annual_files.py -i $INFILE -v $VARNAMELIST -o $OUTDIR -p $PREFIX`
 
-   where
+      where
 
-   xxx
+      `$INFILE` = path/filename of the monthly (mosaicked, if you divided the domain into 10x10s) file
+      `$VARNAMELIST` = comma-separated list of the monthly variables in the file (e.g., "LAI,Fcanopy,albedo")
+      `$OUTDIR` = output directory
+      `$PREFIX` = prefix of output filenames
 
    2. Disaggregate the monthly timeseries to daily:
 
-   `xxx`
+      `wrap_disagg_veghist_monthly2hourly_nc.pl $INDIR $PREFIX $OUTDIR`
 
-   where
+      where
 
-   xxx
+      `$INDIR` = input directory (=output directory of previous step)
+      `$PREFIX` = prefix of input/output filenames
+      `$OUTDIR` = output directory
 
 ## Utility Scripts
 
-!!! Fill this out more
 Some useful utility scripts:
  - create_domain_file_from_asc_inputs.py - I use this to create domain files
  - create_metsim_state_file_from_domain_file.py - I use this to create metsim initial state files
  - gridclip.py - clips a netcdf file to the specified lat/lon boundaries
  - the subsample scripts - both for subsampling and for clipping to a domain file (with or without subsampling)
  - set_run_cell.py
+set_run_cell.py -p $AGGROOT/NLCD_INEGI_MODIS/2011/vic_params.allyears/params.USMX.NLCD_INEGI.2011.2000_2016.10_20n.-70_-60e.nc -r /home/tjbohn/data/PR/domain/domain.PR.10_20n.-70_-60e.nc -v mask -o /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp
+mv /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc
