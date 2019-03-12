@@ -4,7 +4,11 @@ To use these scripts, make sure that the path to the "tools" directory is in you
 
 Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, broken up into "tiles" that are roughly equal-area (see map at https://lpdaac.usgs.gov/dataset_discovery/modis). The tiles have north and south boundaries that correspond to 10-degree latitude intervals, but the east and west boundaries are slanted at various angles (relative to a geographic projection) depending on how far from the Greenwich meridian they are. So pixels in these files occur in rows that occur at regular latitude intervals, but within the rows, the pixels are not regularly spaced with respect to longitude (farther apart further from the equator).
 
-## Stage 1: Download and aggregate MODIS files
+## Stages 1-2: Download and aggregate MODIS files
+
+There are some initial steps to perform for stage 1. Then, the remainder of stage 1 and all of stage 2 are handled by a single script.
+
+Steps:
 
 1. Create an account with NASA Earthdata. To obtain a NASA Earthdata Login account, visit https://urs.earthdata.nasa.gov/users/new/.
 
@@ -135,47 +139,51 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
    Examples of running `wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
 
-   - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh  
-   - batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.2011.30_40.csh  
+   - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh`  
+   - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.2011.30_40.csh`  
+   - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.s1992.30_40.csh`  
+   - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.1992.30_40.csh` - this is only for generating land cover fractions for 1992 to be used in stages 3-4 for the s1992 parameter set; MODIS observations from 2000-2016 aggregated over the 1992 map don't make much sense.  
 
    To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
 
    After the aggregation is complete, the large MODIS input files can be discarded.
 
-## Stage 2: Gap-filling and other post-processing
+## Stages 3-4: Gap-filling and other post-processing
 
-   Before this stage can begin, we need 2 other files:
-   - NetCDF VIC-5 compliant domain file for the current domain
-   - NetCDF VIC-5 compliant "source" parameter file (which will supply all parameters except land cover fractions, LAI, Fcanopy, and albedo) for the current domain
+A single script handles stages 3 and 4. Stage 3 is gap-filling. Stage 4 is the generation of VIC parameter files by combining the new land cover and time-varying land surface characteristics with the other parameters from the "source" parameter files.
 
-   For the CONUS_MX and USMX domains, domain files are available for download on Zenodo [(PITRI Precipitation Disaggregation Parameters)](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on Zenodo [(MOD-LSP VIC Parameters)](https://zenodo.org/record/2559631).
+Before stage 4 can begin, we need 2 other files:
+ - NetCDF VIC-5 compliant domain file for the current domain
+ - NetCDF VIC-5 compliant "source" parameter file (which will supply all parameters except land cover fractions, LAI, Fcanopy, and albedo) for the current domain
 
-   If you have a different domain, you can either clip out your domain from within these domain and parameter files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).  To create a NetCDF VIC-5 compliant "source" parameter file for a domain outside L2015, you will need ascii-format VIC soil, snow, and vegetation parameters (and vegetation library file) for the domain, and you can use the tool [tonic](https://github.com/UW-Hydro/tonic).
+For the CONUS_MX and USMX domains, domain files are available for download on Zenodo [(PITRI Precipitation Disaggregation Parameters)](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on Zenodo [(MOD-LSP VIC Parameters)](https://zenodo.org/record/2559631).
+
+If you have a different domain, you can either clip out your domain from within these domain and parameter files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).  To create a NetCDF VIC-5 compliant "source" parameter file for a domain outside L2015, you will need ascii-format VIC soil, snow, and vegetation parameters (and vegetation library file) for the domain, and you can use the tool [tonic](https://github.com/UW-Hydro/tonic).
 
 ### Option 1: if you have divided your domain into 10x10 degree boxes
 
 #### 1.a. Clipping
 
-   If you wish to divide the domain into 10x10 degree boxes (for parallel processing), you will also need to divide (a) the domain file and (b) the "source" VIC parameter file into similar boxes. For this, use the following script:
+If you wish to divide the domain into 10x10 degree boxes (for parallel processing), you will also need to divide (a) the domain file and (b) the "source" VIC parameter file into similar boxes. For this, use the following script:
 
    `grid_multi_clip.py -i $INFILE -m $COARSE_MASK -p $PREFIX -o $OUTDIR`
 
-   where
+where
 
    `$INFILE` = NetCDF VIC-5 compliant input file to be clipped into boxes (either a domain file or a VIC parameter file), e.g., `$DATA_ROOT/$DOMAIN/domain.$DOMAIN.nc`, where `$DATA_ROOT` = path to top-level directory for storing tables, masks, domain files, and vic parameters; and `$DOMAIN` is either "CONUS_MX" or "USMX".  
    `$COARSE_MASK` = same 10x10 degree mask of domain as used in Stage 1.  
    `$PREFIX` = output file prefix, e.g., `domain.$DOMAIN.10x10`.  
    `$OUTDIR` = output directory, e.g., `$DATA_ROOT/domain.$DOMAIN.10x10`.  
 
-   For each output file, the lat/lon range covered by the tile will be appended to the prefix, followed by `.nc`.
+For each output file, the lat/lon range covered by the tile will be appended to the prefix, followed by `.nc`.
 
 #### 1.b. Processing
 
-   For domains that have been divided into 10x10 tiles, the script that manages all processing is `wrap_process_veg_hist.pl`. This script loops over the 10x10 tiles and calls an instance of `process_veg_hist.single_file.pl` for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel. Usage:
+For domains that have been divided into 10x10 tiles, the script that manages all processing is `wrap_process_veg_hist.pl`. This script loops over the 10x10 tiles and calls an instance of `process_veg_hist.single_file.pl` for each one, in parallel. User must specify the range of 10x10 tiles, the domain, a comma-separated list of processing stages to perform, and the number of processes to run in parallel. Usage:
 
    `wrap_process_veg_hist.pl $AGGROOT/$LCTYPE $AGGROOT2/$LCTYPE $LCID $PREFIX $STEPLIST $LCID_CV $LCID_OUT $TIME_OFFSET $NPARALLEL $CLEAN $DATA_ROOT/$DOMAIN $DOMAINFILE_PFX $PARAM_PFX $LCTYPE`
 
-   where
+where
 
    `$AGGROOT` = path to top-level directory of the tree of output directories  
    `$LCTYPE` = same `$LCTYPE` used in Stage 1 (downloading and aggregating).  
@@ -184,7 +192,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$PREFIX` = should be same `$OUTPFX` from Stage 1, but if you are dividing into 10x10 tiles, and you want to specify a subset of files to process, you should add any information that would distinguish these files (e.g., for 30-40 latitude, specify veg_hist.30)  
    `$STEPLIST` = comma-separated list of processing steps to run, e.g., "0,1,2,3,4,5,6,7,8,9". Processing steps:  
    - 0: Remove remaining albedo observations that appear impacted by snow (calls `cleanup_albedo.py`).  
-   - 101: (optional) Replace land cover area fractions with those of another land cover classification. Requires specifying `$LCID_CV` which should be the `$LCID` of some other parameter set that has completed step 0 (calls `replace_cv.py`).  
+   - 101: (optional) Replace land cover area fractions with those of another land cover classification. Requires specifying `$LCID_CV` which should be the `$LCID` of some other parameter set that has completed step 0 (calls `replace_cv.py`). This is primarily used for creating parameters for the NLCD_INEGI "s" (stable land cover) parameter sets. See "Examples" section below.  
    - 1: Compute the climatological (temporal) mean and standard deviation of LAI, Fcanopy, and albedo of each of the 46 8-day observations in the annual cycle, for each land cover class in each grid cell (calls `compute_clim_veg_hist.py`).  
    - 2: Fill gaps in the climatological mean and standard deviation (calls `gapfill_veg_hist.py`).  
    - 3: Compute standardized 8-day anomalies with respect to the climatological (temporal) mean and standard deviation of LAI, Fcanopy, and albedo, for each land cover class in each grid cell (calls `compute_anom_veg_hist.py`).  
@@ -204,15 +212,15 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    `$DOMAINFILE_PFX` = both the name of the directory containing 10x10 domain files, and also the file prefix of those 10x10 files.  
    `$PARAM_PFX` = this refers to the "source" vic parameter dataset of which the land cover fractions and LAI, Fcanopy, and albedo annual cycles will be replaced with the ones being processed; `$PARAM_PFX` is both the name of the directory containing 10x10 files, and also the file prefix of those 10x10 files.  
 
-   This script calls `process_veg_hist.single_file.pl` for each 10x10 tile.
+This script calls `process_veg_hist.single_file.pl` for each 10x10 tile.
 
 #### 1.c. Mosaicking
 
-   After running `wrap_process_veg_hist.pl` on all 10x10 tiles, the end result can be mosaicked back together into a single file covering the entire domain via:
+After running `wrap_process_veg_hist.pl` on all 10x10 tiles, the end result can be mosaicked back together into a single file covering the entire domain via:
 
    `grid_mosaic.py -d $DOMAIN_FILE -i $AGGROOT2/$LCTYPE/$LCID/$SUBDIR -p $PREFIX -o $OUTFILE`
 
-   where
+where
 
    `$SUBDIR` = subdirectory containing the files you want to mosaic together. For the output of stage 6 (17-year monthly timeseries of LAI etc.), `$SUBDIR` = "monthly". For the output of stage 7 (vic parameters with monthly annual cycle derived from climatological mean between start and end years), `$SUBDIR` = "vic_params.allyears". For the output of stage 9 (vic parameters with monthly annual cycle derived from a single year `$YEAR`), `$SUBDIR` = `vic_params.$YEAR_$YEAR`.  
    `$STARTYEAR` and `$ENDYEAR` = first and last years of period used for computing monthly annual cycle; for parameter sets using climatological mean over the period 2000-2016, these are 2000 and 2016; for parameter sets using the monthly values from a single year, `$STARTYEAR` and `$ENDYEAR` are both set to that year.  
@@ -220,59 +228,61 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
 #### Examples
 
-   Examples of running `wrap_process_veg_hist.pl` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+Examples of running `wrap_process_veg_hist.pl` for one row of 10x10 tiles (the row with latitudes spanning 30-40 deg N) for the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
 
-   - batch.wrap_process_veg_hist.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh  
-   - batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.2011.30_40.csh  
+ - `batch.wrap_process_veg_hist.pl.CONUS_MX.MODIS.mode_PFT.30_40.csh`  
+ - `batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.2011.30_40.csh`  
+ - `batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.s1992.30_40.csh` - note: for s1992, you need to have run batch scripts for Stages 1-2 for both s1992 and 1992; the land cover fractions from 1992 will be used in s1992.  
 
-   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
 
 ### Option 2: if you are processing your domain as a single stream and file
 
 #### Processing
 
-   If you have a small domain and want to process it as a single stream (each stage of processing deals with a single file containing the entire domain), run:
+If you have a small domain and want to process it as a single stream (each stage of processing deals with a single file containing the entire domain), run:
 
    `process_veg_hist.single_file.pl $AGGROOT $AGGROOT2 $LCID $AGGFILE $STAGELIST $LCID_CV $LCID_OUT $CLEAN $DATA_ROOT $DOMAIN_PFX $PARAM_PFX $LCTYPE`
 
-   where
+where
 
    `$AGGFILE` = the path/name of the output file of Stage 1 (i.e., aggregated MODIS observations over land cover fractions).  
    all other `$*` variables = same definitions as under Option 1 (the 10x10 tile option).  
 
 #### Examples
 
-   Examples of running `process_veg_hist.single_file.pl` for a single 10x10 tile for latitudes 30-40 deg N and longitudes -130--120 deg E from the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
+Examples of running `process_veg_hist.single_file.pl` for a single 10x10 tile for latitudes 30-40 deg N and longitudes -130--120 deg E from the CONUS_MX and USMX domains, respectively, can be found in the batch files under the "examples" directory:
 
-   - batch.process_veg_hist.single_file.pl.CONUS_MX.MODIS.mode_PFT.30_40n.-130_-120e.csh  
-   - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.2011.30_40n.-130_-120e.csh  
+ - batch.process_veg_hist.single_file.pl.CONUS_MX.MODIS.mode_PFT.30_40n.-130_-120e.csh  
+ - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.2011.30_40n.-130_-120e.csh  
+ - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.s1992.30_40n.-130_-120e.csh  
 
-   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
 
-## Stage 3: (Optional) Prepare monthly timeseries of MODIS Observations
+## Stage 5: (Optional) Prepare monthly timeseries of MODIS Observations
 
-   This stage is only necessary if you wish to drive VIC with an explicit 17-year timeseries of LAI, Fcanopy, and albedo.
+This stage is only necessary if you wish to drive VIC with an explicit 17-year timeseries of LAI, Fcanopy, and albedo.
 
-   1. Break up the time series of monthly-varying files (an output of processing step 6) into 1-year files:
+1. Break up the time series of monthly-varying files (an output of processing step 6) into 1-year files:
 
-      `breakup_veg_hist_into_annual_files.py -i $INFILE -v $VARNAMELIST -o $OUTDIR -p $PREFIX`
+   `breakup_veg_hist_into_annual_files.py -i $INFILE -v $VARNAMELIST -o $OUTDIR -p $PREFIX`
 
-      where
+   where
 
-      `$INFILE` = path/filename of the monthly (mosaicked, if you divided the domain into 10x10s) file.  
-      `$VARNAMELIST` = comma-separated list of the monthly variables in the file (e.g., "LAI,Fcanopy,albedo").  
-      `$OUTDIR` = output directory.  
-      `$PREFIX` = prefix of output filenames.  
+   `$INFILE` = path/filename of the monthly (mosaicked, if you divided the domain into 10x10s) file.  
+   `$VARNAMELIST` = comma-separated list of the monthly variables in the file (e.g., "LAI,Fcanopy,albedo").  
+   `$OUTDIR` = output directory.  
+   `$PREFIX` = prefix of output filenames.  
 
-   2. Disaggregate the monthly timeseries to daily:
+2. Disaggregate the monthly timeseries to daily:
 
-      `wrap_disagg_veghist_monthly2hourly_nc.pl $INDIR $PREFIX $OUTDIR`
+   `wrap_disagg_veghist_monthly2hourly_nc.pl $INDIR $PREFIX $OUTDIR`
 
-      where
+   where
 
-      `$INDIR` = input directory (=output directory of previous step).  
-      `$PREFIX` = prefix of input/output filenames.  
-      `$OUTDIR` = output directory.  
+   `$INDIR` = input directory (=output directory of previous step).  
+   `$PREFIX` = prefix of input/output filenames.  
+   `$OUTDIR` = output directory.  
 
 ## Utility Scripts
 

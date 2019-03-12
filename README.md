@@ -13,8 +13,8 @@ The VIC land surface parameters consist of gridded values of: soil properties, f
 
 The chosen domain was the continental US, Mexico, and southern Canada (the CONUS + Mexico, or CONUS_MX domain), at 1/16 degree (6 km) spatial resolution. This is the domain used in the L2015 gridded daily meteorology dataset, and these parameters are designed to be compatible with that dataset.
 
-## Processing Steps
-The processing steps covered by the scripts in this dataset are:
+## Processing Stages
+The processing stages covered by the scripts in this dataset are:
 1. Downloading of MODIS data
 2. Aggregation of MODIS land surface properties over the desired land cover classification
 3. Gap-filling
@@ -51,7 +51,7 @@ These parameter files were designed for use with VIC 5 (image driver). VIC 5 ima
  - README.md - this file
 
 docs/
- - [Procedure.md](./docs/Procedure.md) - list of processing steps
+ - [Procedure.md](./docs/Procedure.md) - list of processing steps, the scripts that run them, and their usage
 
 examples/ - batch files containing example commands and arguments
 
