@@ -34,6 +34,7 @@ MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_disc
  - MOD13A1.006 Normalized Different Vegetation Index (NDVI) (Huete et al., 2002)
 
 ### Miscellaneous Files:
+ - NetCDF format VIC-5 image driver domain files compatible with the MOD-LSP domains available from [Zenodo](https://zenodo.org/record/2559631)
  - NetCDF format VIC-5 image driver parameter file from the L2015 simulations (soil parameters were taken directly from this file) available from [Zenodo](https://zenodo.org/record/2564019)
  - Land masks, tables listing land cover classes and class-specific properties (under the data/ directory)
 
@@ -50,13 +51,9 @@ These parameter files were designed for use with VIC 5 (image driver). VIC 5 ima
  - README.md - this file
 
 docs/
- - [Scripts.md](./docs/Scripts.md) - list of scripts
  - [Procedure.md](./docs/Procedure.md) - list of processing steps
 
-examples/ - the inputs and intermediate files for an example 10x10 degree "tile"
- - batch.process_one_tile.40_50n.130_120e.sh - linux shell script that contains the commands for processing an example 10x10 tile
- - inputs/ - input files for the example
- - outputs/ - intermediate and final output files for the example
+examples/ - batch files containing example commands and arguments
 
 data/ - input files other than the land cover classifications or MODIS observations, e.g., masks, tables of class-specific properties
  - CONUS_MX/ - data for CONUS_MX domain
