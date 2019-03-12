@@ -259,10 +259,10 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
       where
 
-      `$INFILE` = path/filename of the monthly (mosaicked, if you divided the domain into 10x10s) file
-      `$VARNAMELIST` = comma-separated list of the monthly variables in the file (e.g., "LAI,Fcanopy,albedo")
-      `$OUTDIR` = output directory
-      `$PREFIX` = prefix of output filenames
+      `$INFILE` = path/filename of the monthly (mosaicked, if you divided the domain into 10x10s) file.  
+      `$VARNAMELIST` = comma-separated list of the monthly variables in the file (e.g., "LAI,Fcanopy,albedo").  
+      `$OUTDIR` = output directory.  
+      `$PREFIX` = prefix of output filenames.  
 
    2. Disaggregate the monthly timeseries to daily:
 
@@ -270,9 +270,9 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 
       where
 
-      `$INDIR` = input directory (=output directory of previous step)
-      `$PREFIX` = prefix of input/output filenames
-      `$OUTDIR` = output directory
+      `$INDIR` = input directory (=output directory of previous step).  
+      `$PREFIX` = prefix of input/output filenames.  
+      `$OUTDIR` = output directory.  
 
 ## Utility Scripts
 
