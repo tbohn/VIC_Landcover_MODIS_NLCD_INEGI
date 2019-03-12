@@ -148,7 +148,7 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
    - NetCDF VIC-5 compliant domain file for the current domain
    - NetCDF VIC-5 compliant "source" parameter file (which will supply all parameters except land cover fractions, LAI, Fcanopy, and albedo) for the current domain
 
-   For the CONUS_MX and USMX domains, domain files are available for download on [Zenodo](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on [Zenodo](https://zenodo.org/record/2559631).
+   For the CONUS_MX and USMX domains, domain files are available for download on Zenodo [(PITRI Precipitation Disaggregation Parameters)](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on Zenodo [(MOD-LSP VIC Parameters)](https://zenodo.org/record/2559631).
 
    If you have a different domain, you can either clip out your domain from within these domain and parameter files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).  To create a NetCDF VIC-5 compliant "source" parameter file for a domain outside L2015, you will need ascii-format VIC soil, snow, and vegetation parameters (and vegetation library file) for the domain, and you can use the tool [tonic](https://github.com/UW-Hydro/tonic).
 
@@ -277,10 +277,69 @@ Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, brok
 ## Utility Scripts
 
 Some useful utility scripts:
- - create_domain_file_from_asc_inputs.py - I use this to create domain files
- - create_metsim_state_file_from_domain_file.py - I use this to create metsim initial state files
- - gridclip.py - clips a netcdf file to the specified lat/lon boundaries
- - the subsample scripts - both for subsampling and for clipping to a domain file (with or without subsampling)
- - set_run_cell.py
-set_run_cell.py -p $AGGROOT/NLCD_INEGI_MODIS/2011/vic_params.allyears/params.USMX.NLCD_INEGI.2011.2000_2016.10_20n.-70_-60e.nc -r /home/tjbohn/data/PR/domain/domain.PR.10_20n.-70_-60e.nc -v mask -o /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp
-mv /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc.tmp /media/tjbohn/BigData/data/VegHist/NLCD_INEGI_MODIS/2001.PR/vic_params.allyears/params.PR.S2006.2001.PR.2000_2016.10_20n.-70_-60e.nc
+ - To create a domain file for a new domain:
+
+   `create_domain_file_from_asc_inputs.py -m $MASK -f $FRACMASK -d $DEM -p $PRCP_PARAMDIR -o $OUTFILE`
+
+   where
+
+   `$MASK` = ESRI ascii-format mask delineating the domain (1 = in domain; 0 = outside)  
+   `$FRACMASK` = ESRI ascii-format grid showing the fraction of each cell's area that lies within the domain  
+   `$DEM` = ESRI ascii-format grid of elevation values (Digital Elevation Model)  
+   `$PRCP_PARAMDIR` = directory containing ESRI ascii-format grid files of precipitation parameters (2 parameters, "duration" and "peak_time", with 12 monthly mean values each, one file per month)  
+   `$OUTFILE` = output path/filename
+
+ - To create initial state files for MetSim:
+
+   `create_metsim_state_file_from_domain_file.py -i $INFILE -s $STATEDATE -o $OUTFILE`
+
+   where
+
+   `$INFILE` = domain file  
+   `$STATEDATE` = date of 1 day prior to the desired start; format `$YYYY-$MM-$SDD`  
+   `$OUTFILE` = output MetSim state file  
+
+ - To clip out a spatial subset (lat/lon box) of a netcdf file:
+
+   `gridclip.py -i $INFILE -s $SOUTH -n $NORTH -w $WEST -e $EAST -o $OUTFILE`
+
+   where
+
+   `$INFILE` = input file  
+   `$SOUTH`,`$NORTH`,`$WEST`,`$EAST` = geographic boundaries of subset  
+   `$OUTFILE` = output file  
+
+ - To subsample VIC parameters to a finer resolution AND/OR clip to a new irregularly-shaped domain (via the mask of a domain file):
+
+   `subsample_vic_params_over_domain.py -i $INFILE -d $DOMAINFILE [-n] [-s] [-f] -o $OUTFILE`
+
+   where
+
+   `$INFILE` = input file  
+   `$DOMAINFILE` = domain file to clip to (at either the same or finer resolution)  
+   `-n` = optional; if specified, use default fill ("nodata") values
+   `-s` = optional; if specified, `$INFILE` contains snow bands
+   `-f` = optional; if specified, `$INFILE` contains Fcanopy
+   `$OUTFILE` = output file  
+
+ - To subsample VIC gridded daily forcings to a finer resolution AND/OR clip to a new irregularly-shaped domain (via the mask of a domain file):
+
+   `subsample_forcings_over_domain.py -i $INFILE -d $DOMAINFILE -v $VARNAMELIST -o $OUTFILE`
+
+   where
+
+   `$INFILE` = input file  
+   `$DOMAINFILE` = domain file to clip to (at either the same or finer resolution)  
+   `$VARNAMELIST` = (optional) comma-separated list of variables to process; default = "Prec,Tmin,Tmax,wind"  
+   `$OUTFILE` = output file  
+
+ - To set the "run_cell" variable equal to the mask of a forcing file (to ensure that VIC doesn't try to run where no forcings are available):
+
+   `set_run_cell.py -p $PARAMFILE -r $RUNCELLFILE -v $VARNAME -o $OUTFILE`
+
+   where
+
+   `$PARAMFILE` = VIC parameter file  
+   `$RUNCELLFILE` = file from which to get the values for setting "run_cell", e.g., a domain file, or maybe another VIC parameter file  
+   `$VARNAME` = name of variable in `$RUNCELLFILE` the values of which will be assigned to "run_cell"  
+   `$OUTFILE` = output file
