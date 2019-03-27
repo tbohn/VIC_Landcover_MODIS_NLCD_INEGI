@@ -1,6 +1,6 @@
 # Processing Steps for the VIC_Landcover_MODIS_NLCD_INEGI Project
 
-To use these scripts, make sure that the path to the "tools" directory is in your `$PATH` environment variable.
+To use these scripts, make sure that the path to the "tools" directory is in your `$PATH` environment variable. These scripts require Python 3.6.4 and Perl 5 to be installed on your system.
 
 Quick note on MODIS files: the MODIS observations are on a sinusoidal grid, broken up into "tiles" that are roughly equal-area (see map at https://lpdaac.usgs.gov/dataset_discovery/modis). The tiles have north and south boundaries that correspond to 10-degree latitude intervals, but the east and west boundaries are slanted at various angles (relative to a geographic projection) depending on how far from the Greenwich meridian they are. So pixels in these files occur in rows that occur at regular latitude intervals, but within the rows, the pixels are not regularly spaced with respect to longitude (farther apart further from the equator).
 
@@ -156,7 +156,7 @@ Before stage 4 can begin, we need 2 other files:
  - NetCDF VIC-5 compliant domain file for the current domain
  - NetCDF VIC-5 compliant "source" parameter file (which will supply all parameters except land cover fractions, LAI, Fcanopy, and albedo) for the current domain
 
-For the CONUS_MX and USMX domains, domain files are available for download on Zenodo [(PITRI Precipitation Disaggregation Parameters)](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on Zenodo [(MOD-LSP VIC Parameters)](https://zenodo.org/record/2559631).
+For the CONUS_MX and USMX domains, domain files are available for download on Zenodo [(PITRI Precipitation Disaggregation Parameters)](https://zenodo.org/record/2564019). For these same domains, "source" parameter files based on Livneh et al (2015) ("L2015" henceforth) are availabled for download on Zenodo [(MOD-LSP VIC Parameters)](https://zenodo.org/record/2612560).
 
 If you have a different domain, you can either clip out your domain from within these domain and parameter files (if your domain is inside those domains) or create a domain file from elemental inputs (mask, and DEM) with a utility script (see the "Utility Scripts" section below).  To create a NetCDF VIC-5 compliant "source" parameter file for a domain outside L2015, you will need ascii-format VIC soil, snow, and vegetation parameters (and vegetation library file) for the domain, and you can use the tool [tonic](https://github.com/UW-Hydro/tonic).
 

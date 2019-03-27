@@ -1,6 +1,6 @@
 # VIC_Landcover_MODIS_NLCD_INEGI
 
-This project contains the scripts used to created MODIS-based land surface parameters [(MOD-LSP)](https://zenodo.org/record/2559631) (Bohn and Vivoni, 2019a) for the VIC model (Liang et al., 1994) release 5.0 and later (Hamman et al., 2018). These parameters are intended for use in VIC's "image" driver.
+This project contains the scripts used to created MODIS-based land surface parameters [(MOD-LSP)](https://zenodo.org/record/2612560) (Bohn and Vivoni, 2019a) for the VIC model (Liang et al., 1994) release 5.0 and later (Hamman et al., 2018). These parameters are intended for use in VIC's "image" driver.
 
 ## This project had several goals:
 1. update the land cover classification underlying the land surface parameters widely used in VIC modeling over North America
@@ -39,7 +39,7 @@ MODIS phenology available from [MODIS site](https://lpdaac.usgs.gov/dataset_disc
  - Land masks, tables listing land cover classes and class-specific properties (under the data/ directory)
 
 ## Outputs:
- - Several versions of land cover parameters for the VIC land surface model, available for download from [Zenodo](https://zenodo.org/record/2559631) (Bohn and Vivoni, 2019a).
+ - Several versions of land cover parameters for the VIC land surface model, available for download from [Zenodo](https://zenodo.org/record/2612560) (Bohn and Vivoni, 2019a).
 
 These parameter files were designed for use with VIC 5 (image driver). VIC 5 image driver requires a "domain" file to accompany the parameter file. This domain file is also necessary for disaggregating the daily gridded meteorological forcings to hourly for input to VIC via the disaggregating tool [MetSim](https://github.com/UW-Hydro/MetSim) (Bennett et al., 2018).  We have provided a domain file compatible with the L2015 forcings and the MOD-LSP parameters, on [Zenodo](https://zenodo.org/record/2564019).
 
@@ -64,7 +64,7 @@ tools/ - scripts for aggregating MODIS data over land cover maps and generation 
 ## References
  - Bennett, A., J. J. Hamman, B. Nijssen, E. A. Clark, and K. M. Andreadis, 2018: UW-Hydro/MetSim: Version 1.1.0 (version 1.1.0). Zenodo, doi:10.5281/zenodo.1256120. http://doi.org/10.5281/zenodo.1256120 (Accessed June 7, 2018).
  - Bohn, T. J., and E. R. Vivoni, 2016: Process-based characterization of evapotranspiration sources over the North American monsoon region. Water Resour. Res., 52, 358–384.
- - Bohn, T. J, and E. R. Vivoni, 2019a: MOD-LSP: MODIS-Based Parameters for Variable Infiltration Capacity (VIC) Model over the Continental US, Mexico, and Southern Canada (Version 1.0) [Data set]. Zenodo, doi:10.528/zenodo.2559631. https://zenodo.org/record/2559631.
+ - Bohn, T. J, and E. R. Vivoni, 2019a: MOD-LSP: MODIS-Based Parameters for Variable Infiltration Capacity (VIC) Model over the Continental US, Mexico, and Southern Canada (Version 1.0) [Data set]. Zenodo, doi:10.528/zenodo.2612560. https://zenodo.org/record/2612560.
  - Bohn, T. J, and E. R. Vivoni, 2019b: NLCD_INEGI: Harmonized US-Mexico Land Cover Change Dataset, 1992/2001/2011 (Version 1.1) [Data set]. Zenodo, doi:10.5281/zenodo.2591501. https://zenodo.org/record/2591501.
  - Friedl, M. A., D. Sulla-Menashe, B. Tan, A. Schneider, N. Ramankutty, A. Sibley, and X. Huang, 2010: MODIS Collection 5 global land cover: Algorithm refinements and characterization of new datasets. Remote Sens. Environ., 114, 168–182.
  - Hamman, J. J., B. Nijssen, T. J. Bohn, D. R. Gergel, and Y. Mao, 2018: The Variable Infiltration Capacity Model, Version 5 (VIC-5): Infrastructure improvements for new applications and reproducibility. Geosci. Model Dev., 11, 3481–3496.
