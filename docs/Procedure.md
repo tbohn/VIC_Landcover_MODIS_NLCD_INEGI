@@ -144,7 +144,7 @@ Steps:
    - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.s1992.30_40.csh`  
    - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.1992.30_40.csh` - this is only for generating land cover fractions for 1992 to be used in stages 3-4 for the s1992 parameter set; MODIS observations from 2000-2016 aggregated over the 1992 map don't make much sense.  
 
-   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable. Finally, you must either run these scripts from the `$PROJECT/tools` directory (i.e., `cd $PROJECT/tools` and prepend `../examples/` to the name of the batch script) or add `$PROJECT/tools` to your `$PATH` environment variable.
 
    After the aggregation is complete, the large MODIS input files can be discarded.
 
