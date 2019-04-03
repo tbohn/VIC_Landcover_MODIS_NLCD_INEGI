@@ -144,7 +144,7 @@ Steps:
    - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.s1992.30_40.csh`  
    - `batch.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.1992.30_40.csh` - this is only for generating land cover fractions for 1992 to be used in stages 3-4 for the s1992 parameter set; MODIS observations from 2000-2016 aggregated over the 1992 map don't make much sense.  
 
-   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable. Finally, you must either run these scripts from the `$PROJECT/tools` directory (i.e., `cd $PROJECT/tools` and prepend `../examples/` to the name of the batch script) or add `$PROJECT/tools` to your `$PATH` environment variable.
+   To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project (and replace any other placeholders beginning with `$` with the appropriate values). Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable. Finally, you must either run these scripts from the `$PROJECT/tools` directory (i.e., `cd $PROJECT/tools` and prepend `../examples/` to the name of the batch script) or add `$PROJECT/tools` to your `$PATH` environment variable.
 
    After the aggregation is complete, the large MODIS input files can be discarded.
 
@@ -234,7 +234,7 @@ Examples of running `wrap_process_veg_hist.pl` for one row of 10x10 tiles (the r
  - `batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.2011.30_40.csh`  
  - `batch.wrap_process_veg_hist.pl.USMX.NLCD_INEGI.s1992.30_40.csh` - note: for s1992, you need to have run batch scripts for Stages 1-2 for both s1992 and 1992; the land cover fractions from 1992 will be used in s1992.  
 
-To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project (and replace any other placeholders beginning with `$` with the appropriate values). Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable. Finally, you must either run these scripts from the `$PROJECT/tools` directory (i.e., `cd $PROJECT/tools` and prepend `../examples/` to the name of the batch script) or add `$PROJECT/tools` to your `$PATH` environment variable.
 
 ### Option 2: if you are processing your domain as a single stream and file
 
@@ -257,7 +257,7 @@ Examples of running `process_veg_hist.single_file.pl` for a single 10x10 tile fo
  - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.2011.30_40n.-130_-120e.csh  
  - batch.process_veg_hist.single_file.pl.USMX.NLCD_INEGI.s1992.30_40n.-130_-120e.csh  
 
-To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project. Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable.
+To run these batch files, replace all instances of `$PROJECT` in the files with the path to your copy of this GitHub project (and replace any other placeholders beginning with `$` with the appropriate values). Also make sure they are executable by running `chmod +x $FILENAME`, where `$FILENAME` is the path/name of the batch file that you are making executable. Finally, you must either run these scripts from the `$PROJECT/tools` directory (i.e., `cd $PROJECT/tools` and prepend `../examples/` to the name of the batch script) or add `$PROJECT/tools` to your `$PATH` environment variable.
 
 ## Stage 5: (Optional) Prepare monthly timeseries of MODIS Observations
 
