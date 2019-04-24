@@ -10,26 +10,26 @@ import time
 def main():
     infile = ''
     outfile = ''
-    has_nsa = False
-    has_irr = False
-    has_imp = False
+    has_max_snow_albedo = False
+    has_irrigation = False
+    has_impervious = False
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"hi:nrmo:",["infile=","outfile="])
+        opts, args = getopt.getopt(sys.argv[1:],"hi:armo:",["infile=","outfile="])
     except getopt.GetoptError:
-        print(sys.argv[0], ' -i <infile> [-n] [-r] [-m] -o <outfile>')
+        print(sys.argv[0], ' -i <infile> [-a] [-r] [-m] -o <outfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print(sys.argv[0], ' -i <infile> [-n] [-r] [-m] -o <outfile>')
+            print(sys.argv[0], ' -i <infile> [-a] [-r] [-m] -o <outfile>')
             sys.exit()
         elif opt in ("-i", "--infile"):
             infile = arg
-        elif opt in ("-n", "--has_nsa"):
-            has_nsa = True
-        elif opt in ("-r", "--has_irr"):
-            has_irr = True
-        elif opt in ("-m", "--has_imp"):
-            has_imp = True
+        elif opt in ("-a", "--has_max_snow_albedo"):
+            has_max_snow_albedo = True
+        elif opt in ("-r", "--has_irrigation"):
+            has_irrigation = True
+        elif opt in ("-m", "--has_impervious"):
+            has_impervious = True
         elif opt in ("-o", "--outfile"):
             outfile = arg
 
@@ -59,8 +59,8 @@ def main():
                         'annual_prec',
                         'fs_active',
                        ]
-    if (has_nsa):
-        varnames_2d_soil.append('new_snow_albedo')
+    if (has_max_snow_albedo):
+        varnames_2d_soil.append('max_snow_albedo')
 
     varnames_2d_veg = [
                        'Nveg',
@@ -99,11 +99,11 @@ def main():
                        'trunk_ratio',
                       ]
 
-    if (has_irr):
+    if (has_irrigation):
         varnames_3d_veg.append('irr_active')
         varnames_3d_veg.append('ithresh')
         varnames_3d_veg.append('itarget')
-    if (has_imp):
+    if (has_impervious):
         varnames_3d_veg.append('fimp')
         varnames_3d_veg.append('feffimp')
 
@@ -119,7 +119,7 @@ def main():
                         'veg_rough',
                         'displacement',
                        ]
-    if (has_irr):
+    if (has_irrigation):
         varnames_4d_clim.append('fcrop')
         varnames_4d_clim.append('firr')
         varnames_4d_clim.append('irr_clim')

@@ -51,7 +51,9 @@ These parameter files were designed for use with VIC 5 (image driver). VIC 5 ima
  - README.md - this file
 
 docs/
- - [Procedure.md](./docs/Procedure.md) - list of processing steps, the scripts that run them, and their usage
+ - [Procedure.md](./docs/Procedure.md) - Main Procedure; list of processing steps, the scripts that run them, and their usage
+ - [Procedure_Projected_Land_Cover_Change.md](./docs/Procedure_Projected_Land_Cover_Change.md) - Procedure for modifying existing VIC parameters to account for future projected land cover change; list of processing steps, the scripts that run them, and their usage
+ - [Utilities.md](./docs/Utilities.md) - Descriptions of utility scripts, and their usage
 
 examples/ - batch files containing example commands and arguments
 
