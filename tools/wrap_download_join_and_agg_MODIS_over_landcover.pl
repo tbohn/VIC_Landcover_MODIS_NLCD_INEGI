@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+$config = shift; # config file defining some user-specific terms for data download; can be 'null' if skipping the download stage
 $lctype = shift; # 'modis' or 'asc'
 $lcdir = shift;
 $lcpfx = shift;
@@ -101,12 +102,25 @@ $cmd = "echo $lcmaplist > $lcmaplist_file";
 
 if ($do_stage{1}) {
 
-  # USGS data access info
-  $username = "tedorio";
-  $password = "23claveM8!";
+  # read user-specific USGS access info from config file
+  open(FILE, $config) or die "$0: ERROR: cannot open file $config for reading\n";
+  foreach (<FILE>) {
+    chomp;
+    @fields = split /\s+/;
+    if ($fields[0] =~ /USERNAME/i) {
+      $username = $fields[1];
+    }
+    elsif ($fields[0] =~ /PASSWORD/i) {
+      $password = $fields[1];
+    }
+    elsif ($fields[0] =~ /MODISROOT/i) {
+      $modisroot = $fields[1];
+    }
+  }
+  close(FILE);
 
   # Define MODIS directories etc
-  $rootdir_MODIS = "/home/tjbohn/Data/data/LandCover/MODIS";
+  $rootdir_MODIS = "$modisroot/MODIS";
   $url_MODIS = "e4ftl01.cr.usgs.gov";
   $collection = "006";
   $mission_LAI1 = "MOLT";

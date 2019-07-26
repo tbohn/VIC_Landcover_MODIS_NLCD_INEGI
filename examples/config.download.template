@@ -1,0 +1,5 @@
+# Config file for accessing MODIS data via USGS portal
+# Replace the $* terms with real values (without the $)
+USERNAME $USERNAME
+PASSWORD $PASSWORD
+MODISROOT $MODISROOT

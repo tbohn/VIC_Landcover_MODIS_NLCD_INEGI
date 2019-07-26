@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 require "grid_utils.pl";
 
+$config = shift; # config file defining some user-specific terms for data download; can be 'null' if skipping the download stage
 $lcrootdir = shift;
 $lctype = shift; # "MODIS" or "NLCD_INEGI"
 $lcid = shift; 
@@ -155,7 +156,7 @@ for ($i=$nrows-1; $i>=0; $i--) {
     $script = "wrap_download_join_and_agg_MODIS_over_landcover.pl";
     $logfile = "log.$script.$domain.$lcid.$lat.$latmax.$lon.$lonmax.txt";
     $stagelist = "1,2";
-    $cmd = "$script $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
+    $cmd = "$script $config $lcformat $lcdir $lcpfx $lcid $lc_table $startyear $endyear $v $v $hmin_by_latlon{$lat}{$lon} $hmax_by_latlon{$lat}{$lon} $lat $latmax $lon $lonmax $resolution_out $landmask $domain $outdir $outpfx $force $stagelist > $logfile 2> $logfile &";
     print "$cmd\n";
     (system($cmd)==0) or die "$0: ERROR: $cmd failed\n";
   }
