@@ -7,4 +7,4 @@
 ##
 ## Also, you must run this script from $PROJECT/tools or add $PROJECT/tools to tyour $PATH
 
-wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel $CONFIG $LCROOT NLCD_INEGI 2011 $PROJECT/data/USMX/lc_table.USMX.NLCD_INEGI.csv USMX $PROJECT/data/USMX/mask.land.USMX.0.0625_deg.asc 2000 2016 $PROJECT/data/USMX/mask.land.USMX.10_deg.asc 30 40 -180 0 240 0.0625 $AGGROOT/NLCD_INEGI/2011/aggregated veg_hist 0 &> log.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.2011.30_40.txt 
+wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.parallel $CONFIG $LCROOT NLCD_INEGI 2011 nlcd_inegi $PROJECT/data/USMX/lc_table.USMX.NLCD_INEGI.csv USMX $PROJECT/data/USMX/mask.land.USMX.0.0625_deg.asc 2000 2016 $PROJECT/data/USMX/mask.land.USMX.10_deg.asc 30 40 -180 0 240 0.0625 $AGGROOT/NLCD_INEGI/2011/aggregated veg_hist 0 &> log.wrap_wrap_download_join_and_agg_MODIS_over_landcover.pl.USMX.NLCD_INEGI.2011.30_40.txt 

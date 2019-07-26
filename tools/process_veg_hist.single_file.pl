@@ -20,7 +20,7 @@ foreach $stage (@stages) {
 
 # Fill class = open shrubland
 # have to give index of class, not classID (for NLCD, they're not equal)
-if ($lcid_out =~ /(mode_PFT|IGBP|MODIS)/) {
+if ($lcid_out =~ /(mode|IGBP|MODIS)/) {
   $fill_class = 7;
 }
 else {
