@@ -103,9 +103,10 @@ def main():
         varnames_3d_veg.append('irr_active')
         varnames_3d_veg.append('ithresh')
         varnames_3d_veg.append('itarget')
+        varnames_3d_veg.append('crop_split')
     if (has_impervious):
-        varnames_3d_veg.append('fimp')
-        varnames_3d_veg.append('feffimp')
+        varnames_3d_veg.append('fimperv')
+        varnames_3d_veg.append('feffimperv')
 
     varnames_4d_root = [
                         'root_depth',
@@ -122,7 +123,6 @@ def main():
     if (has_irrigation):
         varnames_4d_clim.append('fcrop')
         varnames_4d_clim.append('firr')
-        varnames_4d_clim.append('irr_clim')
 
     varnames_int = [
                     'layer',
